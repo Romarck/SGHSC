@@ -20,7 +20,16 @@ from app.models.paciente import (
     Paciente, Sexo, RacaCor, EstadoCivil, TipoSanguineo, StatusPaciente, TipoLogradouro
 )
 
-app = create_app("development")
+import os
+
+# Usa o ambiente atual (development/production/homolog). Antes era fixo em
+# "development", o que falhava em produção/homologação.
+app = create_app(os.environ.get("FLASK_ENV", "development"))
+
+
+def obter_admin():
+    """Usuário admin (autor padrão dos registros de demo)."""
+    return Usuario.query.filter_by(username="admin").first()
 
 
 def obter_perfil_medico():
@@ -59,7 +68,7 @@ PACIENTES = [
 ]
 
 
-def seed_pacientes():
+def seed_pacientes(autor):
     criados = []
     for nome, nasc, sexo, cpf, cns, cidade in PACIENTES:
         pac = Paciente.query.filter_by(cpf=cpf).first()
@@ -73,6 +82,7 @@ def seed_pacientes():
                 numero="100", bairro="Centro", cep="37538-000",
                 telefone="(35) 99999-0000",
                 alergias="Dipirona" if cpf.startswith("444") else None,
+                criado_por_id=autor.id,  # NOT NULL desde S-07
             )
             db.session.add(pac)
             db.session.flush()
@@ -481,7 +491,9 @@ def main():
     with app.app_context():
         perfil = obter_perfil_medico()
         medico = obter_medico(perfil)
-        pacientes = seed_pacientes()
+        # Autor dos registros: admin se existir, senão o médico demo.
+        autor = obter_admin() or medico
+        pacientes = seed_pacientes(autor)
         db.session.commit()
 
         for nome_fn, fn in [
