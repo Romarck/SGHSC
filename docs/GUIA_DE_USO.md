@@ -27,6 +27,7 @@ para Santas Casas. Organizado por módulo, na ordem natural de uso do sistema.
 13. [Maternidade](#13-maternidade)
 14. [Administrativo](#14-administrativo)
 15. [Gestão e Compliance](#15-gestão-e-compliance)
+16. [Administração de Usuários e Perfis](#16-administração-de-usuários-e-perfis)
 
 ---
 
@@ -350,9 +351,84 @@ Acesse pelo menu **Gestão**.
 
 ---
 
+## 16. Administração de Usuários e Perfis
+
+> Esta seção é destinada ao **Administrador** do sistema. Os menus e cards de
+> **Usuários** e **Perfis de Acesso** só aparecem para quem tem essa permissão.
+
+O SGHSC usa **controle de acesso por perfil (RBAC)**: cada usuário tem um **perfil**,
+e o perfil define **quais módulos** a pessoa pode acessar. Assim, cada profissional
+vê apenas o que é do seu trabalho — a recepção não vê o financeiro, o médico não vê
+o RH, e assim por diante. Isso também deixa o painel inicial mais limpo, mostrando
+só os módulos liberados para cada um.
+
+### Onde encontrar
+No painel inicial (Dashboard), seção **Administrativo**, use os cards
+**Usuários** e **Perfis de Acesso**. (Endereços diretos: `/usuarios` e `/perfis`.)
+
+### 16.1 Cadastrar um novo usuário
+1. Dashboard → card **Usuários** → botão **Novo Usuário**.
+2. Preencha:
+   - **Nome completo**, **e-mail** e **usuário (login)** — obrigatórios.
+   - **Perfil de acesso** — escolha na lista (Médico, Enfermeiro, Recepcionista,
+     Farmacêutico, etc.). É o perfil que define o que a pessoa vê.
+   - **CPF, Conselho** (CRM/COREN/CRF...) e **Especialidade** — opcionais, úteis
+     para profissionais de saúde.
+3. Clique em **Salvar**. O sistema **gera uma senha temporária** e a exibe **uma
+   única vez** no topo da tela.
+4. **Anote a senha temporária** e repasse-a com segurança para o usuário. No
+   primeiro acesso, ele será **obrigado a trocá-la** por uma senha própria.
+
+> A senha temporária aparece só uma vez. Se esquecer, use **Resetar senha** (abaixo)
+> para gerar uma nova.
+
+### 16.2 Editar, desativar ou resetar senha
+Na lista de usuários, cada linha tem botões de ação:
+- **Editar** (lápis): altera nome, e-mail, perfil e dados profissionais.
+- **Resetar senha** (chave): gera uma nova senha temporária (exibida uma vez) e
+  obriga a troca no próximo acesso. Use quando alguém esquecer a senha.
+- **Desativar / Reativar** (pessoa): um usuário **desativado** não consegue mais
+  entrar, mas o histórico dele é preservado. Prefira **desativar** em vez de excluir,
+  para manter a rastreabilidade. (Você não pode desativar o próprio usuário.)
+
+### 16.3 Perfis de acesso
+1. Dashboard → card **Perfis de Acesso** (ou botão **Perfis** na tela de usuários).
+2. A lista mostra os **perfis padrão** (Médico, Enfermeiro, Recepcionista, etc.),
+   quantos usuários cada um tem e quantas permissões possui.
+
+**Criar um perfil personalizado**
+1. Botão **Novo Perfil**.
+2. Dê um **nome** (ex.: "Enfermeiro do PA") e uma descrição.
+3. Marque, pelos **checkboxes**, exatamente quais permissões o perfil terá. Elas
+   ficam **agrupadas por módulo** (Pacientes, Emergência, Internação, Farmácia...).
+   Use **Marcar todas / Limpar** para agilizar.
+4. **Salvar**. O novo perfil já aparece na lista de perfis ao cadastrar usuários.
+
+**Editar as permissões de um perfil**
+- Clique em **Editar** (lápis) no perfil desejado, ajuste os checkboxes e salve. A
+  mudança vale imediatamente para todos os usuários daquele perfil.
+
+**Regras de segurança dos perfis**
+- O perfil **Administrador** tem acesso total e **não pode ser editado nem excluído**
+  (por segurança).
+- Um perfil **não pode ser excluído** enquanto tiver usuários vinculados. Migre os
+  usuários para outro perfil antes.
+
+### 16.4 Boa prática para a validação
+Crie **um usuário por pessoa** da equipe, com o perfil correspondente à função dela.
+Além de mais seguro, isso faz a **trilha de auditoria** (quem acessou o quê) registrar
+corretamente cada profissional — evite compartilhar o mesmo login entre várias pessoas.
+
+---
+
 ## Dúvidas frequentes
 
-**Esqueci minha senha.** Peça a um administrador para redefinir seu acesso.
+**Esqueci minha senha.** Peça a um administrador para redefinir seu acesso — ele usa
+**Usuários → Resetar senha** (seção 16.2) e repassa a nova senha temporária, que você
+troca no primeiro acesso.
+
+**Sou administrador: como crio acessos para a equipe?** Veja a seção
+[16. Administração de Usuários e Perfis](#16-administração-de-usuários-e-perfis).
 
 **Um documento assinado pode ser alterado?** Não. Após a assinatura digital, o
 documento é selado; qualquer alteração invalida a assinatura. Para corrigir, gere

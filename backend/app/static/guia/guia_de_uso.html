@@ -77,6 +77,7 @@ hr { border:none; border-top:1px solid #e0e0e0; margin:2em 0; }
 <li><a href="#13-maternidade">Maternidade</a></li>
 <li><a href="#14-administrativo">Administrativo</a></li>
 <li><a href="#15-gestão-e-compliance">Gestão e Compliance</a></li>
+<li><a href="#16-administração-de-usuários-e-perfis">Administração de Usuários e Perfis</a></li>
 </ol>
 <hr>
 <h2 id="1-primeiro-acesso-e-login">1. Primeiro acesso e login</h2>
@@ -386,8 +387,93 @@ hr { border:none; border-top:1px solid #e0e0e0; margin:2em 0; }
 <li>*A transmissão real ao barramento nacional depende de credenciamento no DATASUS (pendente).*</li>
 </ul>
 <hr>
+<h2 id="16-administração-de-usuários-e-perfis">16. Administração de Usuários e Perfis</h2>
+<blockquote>Esta seção é destinada ao <strong>Administrador</strong> do sistema. Os menus e cards de <strong>Usuários</strong> e <strong>Perfis de Acesso</strong> só aparecem para quem tem essa permissão.</blockquote>
+<p>O SGHSC usa <strong>controle de acesso por perfil (RBAC)</strong>: cada usuário tem um <strong>perfil</strong>,</p>
+<p>e o perfil define <strong>quais módulos</strong> a pessoa pode acessar. Assim, cada profissional</p>
+<p>vê apenas o que é do seu trabalho — a recepção não vê o financeiro, o médico não vê</p>
+<p>o RH, e assim por diante. Isso também deixa o painel inicial mais limpo, mostrando</p>
+<p>só os módulos liberados para cada um.</p>
+<h3 id="onde-encontrar">Onde encontrar</h3>
+<p>No painel inicial (Dashboard), seção <strong>Administrativo</strong>, use os cards</p>
+<p><strong>Usuários</strong> e <strong>Perfis de Acesso</strong>. (Endereços diretos: <code>/usuarios</code> e <code>/perfis</code>.)</p>
+<h3 id="161-cadastrar-um-novo-usuário">16.1 Cadastrar um novo usuário</h3>
+<ol>
+<li>Dashboard → card <strong>Usuários</strong> → botão <strong>Novo Usuário</strong>.</li>
+<li>Preencha:</li>
+</ol>
+<ul>
+<li><strong>Nome completo</strong>, <strong>e-mail</strong> e <strong>usuário (login)</strong> — obrigatórios.</li>
+<li><strong>Perfil de acesso</strong> — escolha na lista (Médico, Enfermeiro, Recepcionista,</li>
+</ul>
+<p>Farmacêutico, etc.). É o perfil que define o que a pessoa vê.</p>
+<ul>
+<li><strong>CPF, Conselho</strong> (CRM/COREN/CRF...) e <strong>Especialidade</strong> — opcionais, úteis</li>
+</ul>
+<p>para profissionais de saúde.</p>
+<ol>
+<li>Clique em <strong>Salvar</strong>. O sistema <strong>gera uma senha temporária</strong> e a exibe **uma</li>
+</ol>
+<p>única vez** no topo da tela.</p>
+<ol>
+<li><strong>Anote a senha temporária</strong> e repasse-a com segurança para o usuário. No</li>
+</ol>
+<p>primeiro acesso, ele será <strong>obrigado a trocá-la</strong> por uma senha própria.</p>
+<blockquote>A senha temporária aparece só uma vez. Se esquecer, use <strong>Resetar senha</strong> (abaixo) para gerar uma nova.</blockquote>
+<h3 id="162-editar-desativar-ou-resetar-senha">16.2 Editar, desativar ou resetar senha</h3>
+<p>Na lista de usuários, cada linha tem botões de ação:</p>
+<ul>
+<li><strong>Editar</strong> (lápis): altera nome, e-mail, perfil e dados profissionais.</li>
+<li><strong>Resetar senha</strong> (chave): gera uma nova senha temporária (exibida uma vez) e</li>
+</ul>
+<p>obriga a troca no próximo acesso. Use quando alguém esquecer a senha.</p>
+<ul>
+<li><strong>Desativar / Reativar</strong> (pessoa): um usuário <strong>desativado</strong> não consegue mais</li>
+</ul>
+<p>entrar, mas o histórico dele é preservado. Prefira <strong>desativar</strong> em vez de excluir,</p>
+<p>para manter a rastreabilidade. (Você não pode desativar o próprio usuário.)</p>
+<h3 id="163-perfis-de-acesso">16.3 Perfis de acesso</h3>
+<ol>
+<li>Dashboard → card <strong>Perfis de Acesso</strong> (ou botão <strong>Perfis</strong> na tela de usuários).</li>
+<li>A lista mostra os <strong>perfis padrão</strong> (Médico, Enfermeiro, Recepcionista, etc.),</li>
+</ol>
+<p>quantos usuários cada um tem e quantas permissões possui.</p>
+<p><strong>Criar um perfil personalizado</strong></p>
+<ol>
+<li>Botão <strong>Novo Perfil</strong>.</li>
+<li>Dê um <strong>nome</strong> (ex.: &quot;Enfermeiro do PA&quot;) e uma descrição.</li>
+<li>Marque, pelos <strong>checkboxes</strong>, exatamente quais permissões o perfil terá. Elas</li>
+</ol>
+<p>ficam <strong>agrupadas por módulo</strong> (Pacientes, Emergência, Internação, Farmácia...).</p>
+<p>Use <strong>Marcar todas / Limpar</strong> para agilizar.</p>
+<ol>
+<li><strong>Salvar</strong>. O novo perfil já aparece na lista de perfis ao cadastrar usuários.</li>
+</ol>
+<p><strong>Editar as permissões de um perfil</strong></p>
+<ul>
+<li>Clique em <strong>Editar</strong> (lápis) no perfil desejado, ajuste os checkboxes e salve. A</li>
+</ul>
+<p>mudança vale imediatamente para todos os usuários daquele perfil.</p>
+<p><strong>Regras de segurança dos perfis</strong></p>
+<ul>
+<li>O perfil <strong>Administrador</strong> tem acesso total e <strong>não pode ser editado nem excluído</strong></li>
+</ul>
+<p>(por segurança).</p>
+<ul>
+<li>Um perfil <strong>não pode ser excluído</strong> enquanto tiver usuários vinculados. Migre os</li>
+</ul>
+<p>usuários para outro perfil antes.</p>
+<h3 id="164-boa-prática-para-a-validação">16.4 Boa prática para a validação</h3>
+<p>Crie <strong>um usuário por pessoa</strong> da equipe, com o perfil correspondente à função dela.</p>
+<p>Além de mais seguro, isso faz a <strong>trilha de auditoria</strong> (quem acessou o quê) registrar</p>
+<p>corretamente cada profissional — evite compartilhar o mesmo login entre várias pessoas.</p>
+<hr>
 <h2 id="dúvidas-frequentes">Dúvidas frequentes</h2>
-<p><strong>Esqueci minha senha.</strong> Peça a um administrador para redefinir seu acesso.</p>
+<p><strong>Esqueci minha senha.</strong> Peça a um administrador para redefinir seu acesso — ele usa</p>
+<p><strong>Usuários → Resetar senha</strong> (seção 16.2) e repassa a nova senha temporária, que você</p>
+<p>troca no primeiro acesso.</p>
+<p><strong>Sou administrador: como crio acessos para a equipe?</strong> Veja a seção</p>
+<p><a href="#16-administração-de-usuários-e-perfis">16. Administração de Usuários e Perfis</a>.</p>
 <p><strong>Um documento assinado pode ser alterado?</strong> Não. Após a assinatura digital, o</p>
 <p>documento é selado; qualquer alteração invalida a assinatura. Para corrigir, gere</p>
 <p>um novo documento (ex: uma nova prescrição).</p>
