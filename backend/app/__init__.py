@@ -184,6 +184,9 @@ def _register_blueprints(app: Flask) -> None:
     from .routes.auditoria import bp as auditoria_bp
     app.register_blueprint(auditoria_bp, url_prefix="/auditoria")
 
+    from .routes.usuarios import bp as usuarios_bp
+    app.register_blueprint(usuarios_bp, url_prefix="/usuarios")
+
     from .routes.residuos import bp as residuos_bp
     app.register_blueprint(residuos_bp, url_prefix="/residuos")
 
