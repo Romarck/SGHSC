@@ -1,0 +1,109 @@
+{% extends "layout.html" %}
+{% block title %}Prescrição de Enfermagem — {{ internacao.paciente.nome_exibicao }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">
+        <i class="bi bi-clipboard2 me-2 text-secondary"></i>Prescrição de Enfermagem
+    </h4>
+    <a href="{{ url_for('internacao.prontuario', id=internacao.id) }}"
+       class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Voltar ao prontuário
+    </a>
+</div>
+
+{# Cabeçalho paciente #}
+<div class="card bg-light border-0 mb-3">
+    <div class="card-body py-2 small">
+        <strong>Paciente:</strong> {{ internacao.paciente.nome_exibicao }}
+        ({{ internacao.paciente.idade }} anos) &bull;
+        <strong>Leito:</strong> {{ internacao.leito.numero }} &bull;
+        <strong>Internação:</strong> {{ internacao.numero }}
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header py-2 bg-secondary text-white">
+                <i class="bi bi-clipboard2 me-2"></i>Nova Prescrição de Enfermagem
+            </div>
+            <div class="card-body">
+                <form method="POST" novalidate>
+                    {{ form.hidden_tag() }}
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Cuidados de Enfermagem *</label>
+                        <div class="form-text text-muted mb-2">
+                            Liste os cuidados, um por linha. Ex: Banho no leito 2x/dia, Curativo em MID 1x/dia...
+                        </div>
+                        <textarea name="conteudo" class="form-control font-monospace
+                                  {% if form.conteudo.errors %}is-invalid{% endif %}"
+                                  rows="12"
+                                  placeholder="1. Banho no leito - manhã e tarde&#10;2. Curativo em ferida operatória - 1x/dia&#10;3. HGT de 6/6h&#10;4. Controle de diurese&#10;5. Mudança de decúbito de 2/2h&#10;6. Manutenção de acesso venoso periférico&#10;7. Verificação de sinais vitais de 6/6h">{{ form.conteudo.data or '' }}</textarea>
+                        {% for e in form.conteudo.errors %}
+                        <div class="invalid-feedback">{{ e }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Observações</label>
+                        <textarea name="observacoes" class="form-control" rows="2"
+                                  placeholder="Precauções especiais, restrições...">{{ form.observacoes.data or '' }}</textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{{ url_for('internacao.prontuario', id=internacao.id) }}"
+                           class="btn btn-outline-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-secondary px-4">
+                            <i class="bi bi-check-lg me-1"></i>Salvar prescrição
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {# Prescrição anterior para referência #}
+    <div class="col-md-4">
+        {% set pef_anterior = internacao.prescricoes_enfermagem.first() %}
+        {% if pef_anterior %}
+        <div class="card shadow-sm">
+            <div class="card-header py-2 bg-light">
+                <small class="text-muted">
+                    <i class="bi bi-clock-history me-1"></i>
+                    Prescrição anterior — {{ pef_anterior.data_prescricao.strftime('%d/%m/%Y') }}
+                </small>
+            </div>
+            <div class="card-body">
+                <pre style="white-space:pre-wrap; font-size:.82rem; font-family:inherit">{{ pef_anterior.conteudo }}</pre>
+                <button type="button" class="btn btn-sm btn-outline-secondary w-100 mt-2"
+                        onclick="copiarPrescricaoAnterior()">
+                    <i class="bi bi-clipboard me-1"></i>Copiar para edição
+                </button>
+            </div>
+        </div>
+        {% else %}
+        <div class="card shadow-sm border-dashed">
+            <div class="card-body text-center text-muted py-4">
+                <i class="bi bi-clipboard2 display-4 d-block mb-2"></i>
+                Primeira prescrição de enfermagem desta internação.
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copiarPrescricaoAnterior() {
+    const conteudo = {{ pef_anterior.conteudo | tojson if pef_anterior else '""' }};
+    const textarea = document.querySelector('textarea[name="conteudo"]');
+    if (textarea && conteudo) {
+        textarea.value = conteudo;
+        textarea.focus();
+    }
+}
+</script>
+{% endblock %}

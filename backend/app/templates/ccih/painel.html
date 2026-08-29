@@ -1,0 +1,92 @@
+{% extends "layout.html" %}
+{% block title %}CCIH{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-shield-plus me-2 text-danger"></i>CCIH — Controle de Infecção</h4>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('ccih.relatorio') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-graph-up me-1"></i>Relatório
+        </a>
+        <a href="{{ url_for('ccih.notificar') }}" class="btn btn-danger">
+            <i class="bi bi-plus-lg me-1"></i>Nova notificação
+        </a>
+    </div>
+</div>
+
+<div class="row g-3">
+    {# Notificações #}
+    <div class="col-lg-7">
+        <div class="card shadow-sm">
+            <div class="card-header py-2"><i class="bi bi-clipboard2-pulse me-2"></i>Notificações em aberto</div>
+            <div class="card-body p-0">
+                {% if notificacoes %}
+                <table class="table table-sm table-hover mb-0">
+                    <thead class="table-light">
+                        <tr><th>Nº</th><th>Paciente</th><th>Tipo</th><th>Microrganismo</th><th>Status</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                    {% for n in notificacoes %}
+                    <tr>
+                        <td class="fw-bold small">{{ n.numero }}</td>
+                        <td class="small">{{ n.paciente.nome_exibicao }}</td>
+                        <td class="small">{{ n.tipo.value }}</td>
+                        <td class="small">{{ n.microrganismo or '—' }}</td>
+                        <td>
+                            <span class="badge {% if n.status.value == 'confirmada' %}bg-danger{% elif n.status.value == 'em investigação' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                                {{ n.status.value }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('ccih.detalhe_notificacao', id=n.id) }}"
+                               class="btn btn-sm btn-outline-primary py-0"><i class="bi bi-eye"></i></a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="text-center text-muted py-4">Nenhuma notificação em aberto.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {# Isolamentos ativos #}
+    <div class="col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-header py-2"><i class="bi bi-shield-exclamation me-2"></i>Isolamentos ativos</div>
+            <div class="card-body p-0">
+                {% if isolamentos %}
+                <ul class="list-group list-group-flush">
+                    {% for iso in isolamentos %}
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <span class="badge bg-{{ iso.cor_precaucao }}">{{ iso.tipo_precaucao.value }}</span>
+                                <div class="small fw-semibold mt-1">
+                                    {{ iso.internacao.paciente.nome_exibicao }}
+                                </div>
+                                <div class="small text-muted">
+                                    Leito {{ iso.internacao.leito.numero }}
+                                    {% if iso.microrganismo %}&bull; {{ iso.microrganismo }}{% endif %}
+                                </div>
+                            </div>
+                            <form method="POST" action="{{ url_for('ccih.encerrar_isolamento', id=iso.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn btn-sm btn-outline-secondary py-0" title="Encerrar">
+                                    <i class="bi bi-check2"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <div class="text-center text-muted py-4">Nenhum isolamento ativo.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

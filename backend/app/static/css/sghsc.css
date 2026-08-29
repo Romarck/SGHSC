@@ -1,0 +1,68 @@
+/* sghsc.css — Estilos customizados do SGHSC */
+
+:root {
+    --sghsc-primary: #0d6efd;
+    --sghsc-sidebar-width: 240px;
+}
+
+body {
+    font-size: 0.9rem;
+}
+
+/* Cards de módulo com hover */
+.card-modulo {
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card-modulo:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* Navbar */
+.navbar-brand {
+    font-size: 1.1rem;
+    letter-spacing: 0.5px;
+}
+
+/* Footer fixo na base */
+.footer {
+    font-size: 0.8rem;
+}
+
+/* Tabelas hospitalares — mais compactas */
+.table-hospitalar {
+    font-size: 0.85rem;
+}
+
+.table-hospitalar th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+/* Badge de status de leito */
+.badge-leito-livre    { background-color: #198754; }
+.badge-leito-ocupado  { background-color: #dc3545; }
+.badge-leito-reservado{ background-color: #ffc107; color: #000; }
+.badge-leito-limpeza  { background-color: #6c757d; }
+
+/* Classificação de risco Manchester */
+.risco-vermelho    { border-left: 5px solid #dc3545 !important; }
+.risco-laranja     { border-left: 5px solid #fd7e14 !important; }
+.risco-amarelo     { border-left: 5px solid #ffc107 !important; }
+.risco-verde       { border-left: 5px solid #198754 !important; }
+.risco-azul        { border-left: 5px solid #0dcaf0 !important; }
+
+/* Indicador de certificado digital */
+.cert-valido   { color: #198754; }
+.cert-invalido { color: #dc3545; }
+.cert-ausente  { color: #6c757d; }
+
+/* Impressão — ocultar navbar e controles */
+@media print {
+    .navbar, .footer, .btn, .alert, .no-print {
+        display: none !important;
+    }
+    body { font-size: 11pt; }
+}

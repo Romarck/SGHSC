@@ -1,0 +1,165 @@
+{% extends "layout.html" %}
+{% block title %}Consulta {{ consulta.numero }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">
+        <i class="bi bi-stethoscope me-2 text-success"></i>
+        Consulta {{ consulta.numero }}
+    </h4>
+    <a href="{{ url_for('ambulatorio.agenda') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Agenda
+    </a>
+</div>
+
+{# Cabeçalho do paciente #}
+<div class="card mb-3 border-success">
+    <div class="card-body py-2">
+        <div class="row align-items-center">
+            <div class="col-md-4">
+                <strong>
+                    <a href="{{ url_for('pacientes.detalhe', id=consulta.paciente_id) }}" class="text-decoration-none">
+                        {{ consulta.paciente.nome_exibicao }}
+                    </a>
+                </strong>
+                <br><small class="text-muted">
+                    {{ consulta.paciente.idade }} anos &bull;
+                    {{ consulta.paciente.sexo.value if consulta.paciente.sexo else '' }}
+                </small>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted">{{ consulta.especialidade }} &bull; {{ consulta.tipo.value }}</small>
+                <br><small>{{ consulta.data.strftime('%d/%m/%Y') }} {{ consulta.horario.strftime('%H:%M') }}</small>
+            </div>
+            <div class="col-md-3">
+                {% if consulta.paciente.alergias %}
+                <span class="badge bg-danger">
+                    <i class="bi bi-exclamation-triangle me-1"></i>ALERGIA: {{ consulta.paciente.alergias }}
+                </span>
+                {% endif %}
+            </div>
+            <div class="col-md-2 text-end">
+                {% if consulta.status.value not in ['realizada','cancelada'] %}
+                <form method="POST" action="{{ url_for('ambulatorio.finalizar_consulta', id=consulta.id) }}"
+                      onsubmit="return confirm('Finalizar esta consulta?')">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                    <button type="submit" class="btn btn-sm btn-success">
+                        <i class="bi bi-check-circle me-1"></i>Finalizar
+                    </button>
+                </form>
+                {% else %}
+                <span class="badge bg-success">Realizada</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<form method="POST" novalidate>
+    {{ form.hidden_tag() }}
+    <div class="row g-3">
+
+        {# Sinais vitais #}
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header py-2"><i class="bi bi-activity me-2"></i>Sinais Vitais</div>
+                <div class="card-body">
+                    <div class="row g-2">
+                        <div class="col-6 col-md-2">
+                            <label class="form-label small">PAS (mmHg)</label>
+                            <input type="number" name="pressao_sistolica" class="form-control form-control-sm"
+                                value="{{ form.pressao_sistolica.data or '' }}" />
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <label class="form-label small">PAD (mmHg)</label>
+                            <input type="number" name="pressao_diastolica" class="form-control form-control-sm"
+                                value="{{ form.pressao_diastolica.data or '' }}" />
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <label class="form-label small">FC (bpm)</label>
+                            <input type="number" name="frequencia_cardiaca" class="form-control form-control-sm"
+                                value="{{ form.frequencia_cardiaca.data or '' }}" />
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <label class="form-label small">Temp (°C)</label>
+                            <input type="number" name="temperatura" class="form-control form-control-sm"
+                                value="{{ form.temperatura.data or '' }}" step="0.1" />
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <label class="form-label small">Peso (kg)</label>
+                            <input type="number" name="peso" class="form-control form-control-sm"
+                                value="{{ form.peso.data or '' }}" step="0.1" />
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <label class="form-label small">Altura (m)</label>
+                            <input type="number" name="altura" class="form-control form-control-sm"
+                                value="{{ form.altura.data or '' }}" step="0.01" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Anamnese e exame físico #}
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header py-2">Anamnese</div>
+                <div class="card-body">
+                    <textarea name="anamnese" class="form-control" rows="8"
+                        placeholder="Queixa principal, HDA, antecedentes, medicamentos em uso...">{{ form.anamnese.data or '' }}</textarea>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header py-2">Exame físico</div>
+                <div class="card-body">
+                    <textarea name="exame_fisico" class="form-control" rows="8"
+                        placeholder="Estado geral, sistemas...">{{ form.exame_fisico.data or '' }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        {# Diagnóstico e conduta #}
+        <div class="col-md-5">
+            <label class="form-label">Hipótese diagnóstica</label>
+            <input type="text" name="hipotese_diagnostica" class="form-control"
+                value="{{ form.hipotese_diagnostica.data or '' }}" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">CID-10 principal</label>
+            <input type="text" name="cid10_principal" class="form-control"
+                value="{{ form.cid10_principal.data or '' }}" placeholder="J18.9" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">CID-10 secundário</label>
+            <input type="text" name="cid10_secundario" class="form-control"
+                value="{{ form.cid10_secundario.data or '' }}" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">{{ form.retorno_dias.label.text }}</label>
+            <div class="input-group">
+                <input type="number" name="retorno_dias" class="form-control"
+                    value="{{ form.retorno_dias.data or '' }}" min="1" max="365" placeholder="ex: 30" />
+                <span class="input-group-text">dias</span>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Conduta</label>
+            <textarea name="conduta" class="form-control" rows="4"
+                placeholder="Exames solicitados, encaminhamentos, orientações...">{{ form.conduta.data or '' }}</textarea>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Receituário / Prescrição</label>
+            <textarea name="prescricao" class="form-control" rows="4"
+                placeholder="Medicamentos, posologia, duração...">{{ form.prescricao.data or '' }}</textarea>
+        </div>
+
+        <div class="col-12 d-flex gap-2 justify-content-end">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-floppy me-1"></i>Salvar
+            </button>
+        </div>
+    </div>
+</form>
+{% endblock %}

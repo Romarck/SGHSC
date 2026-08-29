@@ -1,0 +1,88 @@
+{% extends "layout.html" %}
+{% block title %}Cadastrar Leito{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+
+        <div class="d-flex align-items-center mb-3">
+            <a href="{{ url_for('internacao.mapa_leitos') }}" class="btn btn-sm btn-outline-secondary me-3">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <h4 class="mb-0">
+                <i class="bi bi-plus-square me-2 text-warning"></i>Cadastrar Leito
+            </h4>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('internacao.novo_leito') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="row g-3">
+                        <div class="col-sm-4">
+                            <label class="form-label fw-semibold">Número do leito *</label>
+                            <input type="text" name="numero" class="form-control text-uppercase"
+                                   placeholder="Ex: 101-A" required maxlength="20" autofocus>
+                        </div>
+
+                        <div class="col-sm-8">
+                            <label class="form-label fw-semibold">Tipo *</label>
+                            <select name="tipo" class="form-select" required>
+                                <option value="">Selecione...</option>
+                                {% for t in tipos %}
+                                <option value="{{ t.name }}">{{ t.value | capitalize }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold">Ala / Setor</label>
+                            <input type="text" name="ala" class="form-control"
+                                   placeholder="Ex: Ala A, UTI, Maternidade" maxlength="50">
+                        </div>
+
+                        <div class="col-sm-3">
+                            <label class="form-label fw-semibold">Andar</label>
+                            <input type="text" name="andar" class="form-control"
+                                   placeholder="Ex: Térreo, 1º" maxlength="20">
+                        </div>
+
+                        <div class="col-sm-3">
+                            <label class="form-label fw-semibold">Quarto</label>
+                            <input type="text" name="quarto" class="form-control"
+                                   placeholder="Ex: 101" maxlength="20">
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox"
+                                       name="isolamento" id="isolamento" value="1">
+                                <label class="form-check-label" for="isolamento">
+                                    <i class="bi bi-shield-exclamation text-danger me-1"></i>
+                                    Leito de isolamento (CCIH)
+                                </label>
+                            </div>
+                            <div class="form-text text-muted ms-4">
+                                Marque para leitos destinados a pacientes com necessidade de isolamento por infecção.
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{{ url_for('internacao.mapa_leitos') }}" class="btn btn-outline-secondary">
+                            Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i>Salvar leito
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+{% block title %}Registrar Resíduo{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-7">
+        <div class="d-flex align-items-center mb-3">
+            <a href="{{ url_for('residuos.painel') }}" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
+            <h4 class="mb-0"><i class="bi bi-plus-lg me-2 text-success"></i>Registrar Resíduo</h4>
+        </div>
+
+        <div class="card shadow-sm"><div class="card-body">
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Grupo (RDC ANVISA) *</label>
+                        <select name="grupo" class="form-select" required>
+                            {% for g in grupos %}
+                            <option value="{{ g.name }}">{{ g.value }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Peso (kg) *</label>
+                        <input type="number" step="0.001" name="peso_kg" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Setor gerador</label>
+                        <input type="text" name="origem_setor" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Acondicionamento</label>
+                        <input type="text" name="acondicionamento" class="form-control"
+                               placeholder="Saco branco leitoso, caixa perfurocortante...">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Descrição</label>
+                        <textarea name="descricao" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+                <hr class="my-3">
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{{ url_for('residuos.painel') }}" class="btn btn-outline-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-success"><i class="bi bi-check-lg me-1"></i>Registrar</button>
+                </div>
+            </form>
+        </div></div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends "layout.html" %}
+{% block title %}Faturamento — Nova guia{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-file-medical me-2 text-info"></i>Nova guia SUS</h4>
+</div>
+
+<div class="card shadow-sm"><div class="card-body">
+<form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="mb-3">
+        <label class="form-label fw-semibold">Paciente</label>
+        <input type="search" name="q" class="form-control mb-2" placeholder="Nome, CPF ou CNS..."
+               hx-get="{{ url_for('pacientes.busca_htmx') }}" hx-trigger="keyup changed delay:400ms"
+               hx-target="#resultado-busca" autocomplete="off">
+        <div id="resultado-busca" class="border rounded"></div>
+        <input type="hidden" name="paciente_id" id="paciente_id_input" value="{{ paciente.id if paciente else '' }}">
+        <div id="paciente-selecionado" class="alert alert-success mt-2 py-1 small {% if not paciente %}d-none{% endif %}">
+            <span id="nome-paciente-display">{{ paciente.nome_exibicao if paciente else '' }}</span>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label class="form-label fw-semibold">Tipo</label>
+            <select name="tipo" class="form-select">
+                {% for e in tipos %}<option value="{{ e.name }}">{{ e.value }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label fw-semibold">Competência</label>
+            <input type="text" name="competencia" class="form-control" placeholder="AAAAMM">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label fw-semibold">CID principal</label>
+            <input type="text" name="cid_principal" class="form-control">
+        </div>
+        <div class="col-12">
+            <label class="form-label fw-semibold">Procedimento principal</label>
+            <input type="text" name="procedimento_principal" class="form-control">
+        </div>
+    </div>
+
+    <hr class="my-4">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h6 class="mb-0">Procedimentos</h6>
+        <button type="button" class="btn btn-sm btn-outline-primary" onclick="adicionarLinha()"><i class="bi bi-plus-lg me-1"></i>Adicionar</button>
+    </div>
+    <div class="table-responsive"><table class="table table-sm align-middle">
+        <thead class="table-light"><tr><th>Código proc.</th><th style="width:120px">Qtd.</th><th style="width:150px">Valor</th><th style="width:50px"></th></tr></thead>
+        <tbody id="itens-body"></tbody>
+    </table></div>
+
+    <div class="d-flex justify-content-end gap-2 mt-4">
+        <a href="{{ url_for('faturamento.guias') }}" class="btn btn-outline-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Salvar</button>
+    </div>
+</form>
+</div></div>
+
+<template id="tpl-item">
+    <tr>
+        <td><input type="text" name="cod_proc" class="form-control form-control-sm"></td>
+        <td><input type="number" name="qtd_proc" class="form-control form-control-sm" min="1" value="1"></td>
+        <td><input type="number" name="val_proc" class="form-control form-control-sm" step="0.01" min="0" value="0"></td>
+        <td><button type="button" class="btn btn-sm btn-outline-danger py-0" onclick="this.closest('tr').remove()"><i class="bi bi-trash"></i></button></td>
+    </tr>
+</template>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function adicionarLinha() {
+    const tpl = document.getElementById('tpl-item');
+    const clone = tpl.content.cloneNode(true);
+    document.getElementById('itens-body').appendChild(clone);
+}
+function selecionarPaciente(id, nome) {
+    document.getElementById('paciente_id_input').value = id;
+    document.getElementById('nome-paciente-display').textContent = nome;
+    document.getElementById('paciente-selecionado').classList.remove('d-none');
+    document.getElementById('resultado-busca').innerHTML = '';
+}
+document.addEventListener('DOMContentLoaded', adicionarLinha);
+</script>
+{% endblock %}

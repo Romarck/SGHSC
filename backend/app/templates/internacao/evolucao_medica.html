@@ -1,0 +1,125 @@
+{% extends "layout.html" %}
+{% block title %}Evolução Médica — {{ internacao.paciente.nome_exibicao }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">
+        <i class="bi bi-journal-text me-2 text-primary"></i>Evolução Médica
+    </h4>
+    <a href="{{ url_for('internacao.prontuario', id=internacao.id) }}"
+       class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Voltar ao prontuário
+    </a>
+</div>
+
+{# Cabeçalho paciente #}
+<div class="card bg-light border-0 mb-3">
+    <div class="card-body py-2 small">
+        <strong>Paciente:</strong> {{ internacao.paciente.nome_exibicao }}
+        ({{ internacao.paciente.idade }} anos) &bull;
+        <strong>Leito:</strong> {{ internacao.leito.numero }} &bull;
+        <strong>Internação:</strong> {{ internacao.numero }} &bull;
+        Dia <strong>{{ internacao.dias_internado + 1 }}º</strong>
+        {% if internacao.paciente.alergias %}
+        &bull; <span class="text-danger fw-semibold">
+            <i class="bi bi-exclamation-triangle-fill me-1"></i>Alergias: {{ internacao.paciente.alergias }}
+        </span>
+        {% endif %}
+    </div>
+</div>
+
+<form method="POST" novalidate>
+    {{ form.hidden_tag() }}
+
+    <div class="card shadow-sm">
+        <div class="card-header py-2 bg-primary text-white">
+            <i class="bi bi-stethoscope me-2"></i>Registro de Evolução — Método SOAP
+        </div>
+        <div class="card-body">
+
+            {# Tabs SOAP / Livre #}
+            <ul class="nav nav-pills mb-3" id="modoEvolucao">
+                <li class="nav-item">
+                    <button class="nav-link active" type="button"
+                            data-bs-toggle="pill" data-bs-target="#modo-soap">
+                        SOAP
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" type="button"
+                            data-bs-toggle="pill" data-bs-target="#modo-livre">
+                        Texto livre
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+
+                {# Modo SOAP #}
+                <div class="tab-pane fade show active" id="modo-soap">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">
+                                <span class="badge bg-primary me-1">S</span>
+                                Subjetivo — Queixas e relato do paciente
+                            </label>
+                            <textarea name="subjetivo" class="form-control" rows="3"
+                                      placeholder="O paciente refere... Nega febre, dispneia...">{{ form.subjetivo.data or '' }}</textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">
+                                <span class="badge bg-success me-1">O</span>
+                                Objetivo — Exame físico e resultados de exames
+                            </label>
+                            <textarea name="objetivo" class="form-control" rows="4"
+                                      placeholder="BEG, corado, hidratado, anictérico... PA: / FC: / Temp: / SpO2:...">{{ form.objetivo.data or '' }}</textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">
+                                <span class="badge bg-warning text-dark me-1">A</span>
+                                Avaliação — Hipótese / diagnóstico atual
+                            </label>
+                            <textarea name="avaliacao" class="form-control" rows="2"
+                                      placeholder="Pneumonia bacteriana em melhora. CID-10...">{{ form.avaliacao.data or '' }}</textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">
+                                <span class="badge bg-danger me-1">P</span>
+                                Plano — Conduta
+                            </label>
+                            <textarea name="plano" class="form-control" rows="3"
+                                      placeholder="Manter antibioticoterapia... Solicitar RX de controle...">{{ form.plano.data or '' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                {# Modo texto livre #}
+                <div class="tab-pane fade" id="modo-livre">
+                    <label class="form-label fw-semibold">Evolução em texto livre</label>
+                    <textarea name="evolucao_livre" class="form-control" rows="10"
+                              placeholder="Descreva livremente a evolução do paciente...">{{ form.evolucao_livre.data or '' }}</textarea>
+                </div>
+            </div>
+
+            <hr class="my-3">
+
+            <div class="row g-3">
+                <div class="col-sm-4">
+                    <label class="form-label fw-semibold">CID-10 atual</label>
+                    <input type="text" name="cid10_atual" class="form-control text-uppercase"
+                           value="{{ form.cid10_atual.data or '' }}"
+                           placeholder="Ex: J18.0" maxlength="10">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2 mt-3">
+        <a href="{{ url_for('internacao.prontuario', id=internacao.id) }}"
+           class="btn btn-outline-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary px-4">
+            <i class="bi bi-check-lg me-1"></i>Salvar evolução
+        </button>
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+{% block title %}Estoque — Inventários{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-clipboard-data me-2 text-secondary"></i>Inventários</h4>
+    <a href="{{ url_for('estoque.produtos') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
+</div>
+
+<div class="card shadow-sm"><div class="card-body p-0">
+{% if inventarios %}
+<div class="table-responsive"><table class="table table-hover mb-0">
+    <thead class="table-light"><tr><th>Local</th><th>Status</th><th>Data</th><th>Responsável</th></tr></thead>
+    <tbody>
+    {% for i in inventarios %}
+    <tr>
+        <td class="fw-semibold">{{ i.local.nome }}</td>
+        <td><span class="badge bg-secondary">{{ i.status.value }}</span></td>
+        <td class="text-muted">{{ i.criado_em.strftime('%d/%m/%Y') }}</td>
+        <td>{{ i.responsavel.nome }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table></div>
+{% else %}
+<div class="text-center text-muted py-5"><i class="bi bi-clipboard-data display-4"></i><p class="mt-2">Nenhum inventário cadastrado.</p></div>
+{% endif %}
+</div></div>
+{% endblock %}

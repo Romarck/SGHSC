@@ -1,0 +1,206 @@
+{% extends "layout.html" %}
+{% block title %}{{ paciente.nome_exibicao }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-3">
+    <div>
+        <h4 class="mb-0">{{ paciente.nome_exibicao }}</h4>
+        {% if paciente.nome_social %}
+        <small class="text-muted">Nome civil: {{ paciente.nome }}</small>
+        {% endif %}
+        <div class="mt-1">
+            {% if paciente.prontuario %}
+            <span class="badge bg-primary">Prontuário {{ paciente.prontuario.numero }}</span>
+            {% endif %}
+            <span class="badge bg-{{ 'success' if paciente.status.value == 'ativo' else 'danger' }}">
+                {{ paciente.status.value | capitalize }}
+            </span>
+            {% if paciente.alergias %}
+            <span class="badge bg-danger">
+                <i class="bi bi-exclamation-triangle me-1"></i>ALERGIA
+            </span>
+            {% endif %}
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('pacientes.editar', id=paciente.id) }}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-pencil me-1"></i>Editar
+        </a>
+        <a href="{{ url_for('emergencia.registrar_chegada') }}?paciente_id={{ paciente.id }}"
+           class="btn btn-danger btn-sm">
+            <i class="bi bi-heart-pulse me-1"></i>Registrar no PA
+        </a>
+        <a href="{{ url_for('ambulatorio.agendar') }}?paciente_id={{ paciente.id }}"
+           class="btn btn-success btn-sm">
+            <i class="bi bi-calendar-plus me-1"></i>Agendar consulta
+        </a>
+        <a href="{{ url_for('pacientes.listar') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+    </div>
+</div>
+
+<div class="row g-3">
+    {# Dados pessoais #}
+    <div class="col-lg-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header py-2 bg-light">
+                <i class="bi bi-person me-2"></i>Dados pessoais
+            </div>
+            <div class="card-body small">
+                <dl class="row mb-0">
+                    <dt class="col-5 text-muted">Data de nasc.</dt>
+                    <dd class="col-7">
+                        {{ paciente.data_nascimento.strftime('%d/%m/%Y') if paciente.data_nascimento else '—' }}
+                        ({{ paciente.idade }} anos)
+                    </dd>
+                    <dt class="col-5 text-muted">Sexo</dt>
+                    <dd class="col-7">{{ paciente.sexo.value if paciente.sexo else '—' }}</dd>
+                    <dt class="col-5 text-muted">Raça/Cor</dt>
+                    <dd class="col-7">{{ paciente.raca_cor.value if paciente.raca_cor else '—' }}</dd>
+                    <dt class="col-5 text-muted">Estado civil</dt>
+                    <dd class="col-7">{{ paciente.estado_civil.value if paciente.estado_civil else '—' }}</dd>
+                    <dt class="col-5 text-muted">Tipo sanguíneo</dt>
+                    <dd class="col-7">{{ paciente.tipo_sanguineo.value if paciente.tipo_sanguineo else '—' }}</dd>
+                    <dt class="col-5 text-muted">Naturalidade</dt>
+                    <dd class="col-7">{{ paciente.naturalidade or '—' }}</dd>
+                    <dt class="col-5 text-muted">Mãe</dt>
+                    <dd class="col-7">{{ paciente.nome_mae or '—' }}</dd>
+                    <dt class="col-5 text-muted">Pai</dt>
+                    <dd class="col-7">{{ paciente.nome_pai or '—' }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    {# Documentos e contato #}
+    <div class="col-lg-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header py-2 bg-light">
+                <i class="bi bi-card-text me-2"></i>Documentos e contato
+            </div>
+            <div class="card-body small">
+                <dl class="row mb-0">
+                    <dt class="col-5 text-muted">CPF</dt>
+                    <dd class="col-7">{{ paciente.cpf or '—' }}</dd>
+                    <dt class="col-5 text-muted">CNS</dt>
+                    <dd class="col-7">{{ paciente.cns or '—' }}</dd>
+                    <dt class="col-5 text-muted">RG</dt>
+                    <dd class="col-7">
+                        {{ paciente.rg or '—' }}
+                        {% if paciente.rg_orgao_emissor %}/ {{ paciente.rg_orgao_emissor }}-{{ paciente.rg_uf }}{% endif %}
+                    </dd>
+                    <dt class="col-5 text-muted">Plano</dt>
+                    <dd class="col-7">
+                        {{ paciente.plano_saude or 'SUS' }}
+                        {% if paciente.numero_carteirinha %}({{ paciente.numero_carteirinha }}){% endif %}
+                    </dd>
+                    <dt class="col-5 text-muted">Telefone</dt>
+                    <dd class="col-7">{{ paciente.telefone or '—' }}</dd>
+                    <dt class="col-5 text-muted">Telefone 2</dt>
+                    <dd class="col-7">{{ paciente.telefone2 or '—' }}</dd>
+                    <dt class="col-5 text-muted">E-mail</dt>
+                    <dd class="col-7">{{ paciente.email or '—' }}</dd>
+                    <dt class="col-5 text-muted">Endereço</dt>
+                    <dd class="col-7">{{ paciente.endereco_formatado }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    {# Dados clínicos #}
+    <div class="col-lg-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header py-2 bg-light">
+                <i class="bi bi-heart-pulse me-2"></i>Dados clínicos
+            </div>
+            <div class="card-body small">
+                {% if paciente.alergias %}
+                <div class="alert alert-danger py-1 small mb-2">
+                    <strong><i class="bi bi-exclamation-triangle me-1"></i>Alergias:</strong>
+                    {{ paciente.alergias }}
+                </div>
+                {% endif %}
+                {% if paciente.observacoes_clinicas %}
+                <p class="mb-0 text-muted">{{ paciente.observacoes_clinicas }}</p>
+                {% else %}
+                <p class="text-muted mb-0">Nenhuma observação clínica registrada.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {# Histórico de atendimentos no PA #}
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header py-2 d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-heart-pulse me-2 text-danger"></i>Pronto-Atendimentos</span>
+                <a href="{{ url_for('emergencia.registrar_chegada') }}?paciente_id={{ paciente.id }}"
+                   class="btn btn-danger btn-sm">
+                    <i class="bi bi-plus me-1"></i>Novo PA
+                </a>
+            </div>
+            <div class="card-body p-0">
+                {% set ates = atendimentos %}
+                {% if ates %}
+                <table class="table table-sm table-hospitalar mb-0">
+                    <thead><tr><th>Nº</th><th>Entrada</th><th>Classificação</th><th>Status</th><th>Saída</th></tr></thead>
+                    <tbody>
+                    {% for a in ates %}
+                    <tr>
+                        <td><a href="{{ url_for('emergencia.atendimento', id=a.id) }}">{{ a.numero }}</a></td>
+                        <td>{{ a.chegada_em.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td>
+                            {% if a.triagem %}
+                            <span class="badge bg-{{ a.triagem.cor_badge }}">
+                                {{ a.triagem.classificacao.value | capitalize }}
+                            </span>
+                            {% else %}<span class="text-muted">—</span>{% endif %}
+                        </td>
+                        <td><span class="badge bg-secondary">{{ a.status.value }}</span></td>
+                        <td>{{ a.saida_em.strftime('%d/%m/%Y %H:%M') if a.saida_em else '—' }}</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="text-muted p-3 mb-0">Nenhum atendimento de emergência registrado.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {# Histórico de consultas ambulatoriais #}
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header py-2 d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-calendar-check me-2 text-success"></i>Consultas Ambulatoriais</span>
+                <a href="{{ url_for('ambulatorio.agendar') }}?paciente_id={{ paciente.id }}"
+                   class="btn btn-success btn-sm">
+                    <i class="bi bi-plus me-1"></i>Agendar
+                </a>
+            </div>
+            <div class="card-body p-0">
+                {% if consultas %}
+                <table class="table table-sm table-hospitalar mb-0">
+                    <thead><tr><th>Nº</th><th>Data</th><th>Especialidade</th><th>Médico</th><th>Status</th></tr></thead>
+                    <tbody>
+                    {% for c in consultas %}
+                    <tr>
+                        <td><a href="{{ url_for('ambulatorio.consulta', id=c.id) }}">{{ c.numero }}</a></td>
+                        <td>{{ c.data.strftime('%d/%m/%Y') }} {{ c.horario.strftime('%H:%M') }}</td>
+                        <td>{{ c.especialidade }}</td>
+                        <td>{{ c.medico.nome if c.medico else '—' }}</td>
+                        <td><span class="badge bg-secondary">{{ c.status.value }}</span></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="text-muted p-3 mb-0">Nenhuma consulta ambulatorial registrada.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,327 @@
+{% extends "layout.html" %}
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">
+        <i class="bi bi-person-vcard me-2 text-info"></i>{{ titulo }}
+    </h4>
+    <a href="{{ url_for('pacientes.listar') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Voltar
+    </a>
+</div>
+
+<form method="POST" novalidate>
+    {{ form.hidden_tag() }}
+
+    {# ------------------------------------------------------------------ #}
+    {# Identificação #}
+    {# ------------------------------------------------------------------ #}
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-primary text-white py-2">
+            <i class="bi bi-person me-2"></i>Identificação
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">{{ form.nome.label.text }}</label>
+                    <input type="text" name="nome" class="form-control text-uppercase
+                        {% if form.nome.errors %}is-invalid{% endif %}"
+                        value="{{ form.nome.data or '' }}" />
+                    {% for e in form.nome.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">{{ form.nome_social.label.text }}</label>
+                    <input type="text" name="nome_social" class="form-control"
+                        value="{{ form.nome_social.data or '' }}"
+                        placeholder="Deixe em branco se não houver" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">{{ form.data_nascimento.label.text }}</label>
+                    <input type="date" name="data_nascimento" class="form-control
+                        {% if form.data_nascimento.errors %}is-invalid{% endif %}"
+                        value="{{ form.data_nascimento.data.isoformat() if form.data_nascimento.data else '' }}" />
+                    {% for e in form.data_nascimento.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">{{ form.sexo.label.text }}</label>
+                    <select name="sexo" class="form-select {% if form.sexo.errors %}is-invalid{% endif %}">
+                        {% for val, label in form.sexo.choices %}
+                        <option value="{{ val }}" {% if form.sexo.data == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    {% for e in form.sexo.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">{{ form.raca_cor.label.text }}</label>
+                    <select name="raca_cor" class="form-select">
+                        {% for val, label in form.raca_cor.choices %}
+                        <option value="{{ val }}" {% if form.raca_cor.data == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">{{ form.tipo_sanguineo.label.text }}</label>
+                    <select name="tipo_sanguineo" class="form-select">
+                        {% for val, label in form.tipo_sanguineo.choices %}
+                        <option value="{{ val }}" {% if form.tipo_sanguineo.data == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">{{ form.estado_civil.label.text }}</label>
+                    <select name="estado_civil" class="form-select">
+                        {% for val, label in form.estado_civil.choices %}
+                        <option value="{{ val }}" {% if form.estado_civil.data == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">{{ form.naturalidade.label.text }}</label>
+                    <input type="text" name="naturalidade" class="form-control"
+                        value="{{ form.naturalidade.data or '' }}" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">{{ form.nacionalidade.label.text }}</label>
+                    <input type="text" name="nacionalidade" class="form-control"
+                        value="{{ form.nacionalidade.data or 'Brasileira' }}" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ------------------------------------------------------------------ #}
+    {# Documentos #}
+    {# ------------------------------------------------------------------ #}
+    <div class="card shadow-sm mb-3">
+        <div class="card-header py-2">
+            <i class="bi bi-card-text me-2"></i>Documentos
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">{{ form.cpf.label.text }}</label>
+                    <input type="text" name="cpf" class="form-control"
+                        value="{{ form.cpf.data or '' }}" placeholder="000.000.000-00" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">{{ form.rg.label.text }}</label>
+                    <input type="text" name="rg" class="form-control" value="{{ form.rg.data or '' }}" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">{{ form.rg_orgao_emissor.label.text }}</label>
+                    <input type="text" name="rg_orgao_emissor" class="form-control"
+                        value="{{ form.rg_orgao_emissor.data or '' }}" placeholder="SSP" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">{{ form.rg_uf.label.text }}</label>
+                    <input type="text" name="rg_uf" class="form-control"
+                        value="{{ form.rg_uf.data or '' }}" placeholder="MG" maxlength="2" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">{{ form.cns.label.text }}</label>
+                    <input type="text" name="cns" class="form-control"
+                        value="{{ form.cns.data or '' }}" placeholder="000 0000 0000 0000" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ------------------------------------------------------------------ #}
+    {# Dados de saúde #}
+    {# ------------------------------------------------------------------ #}
+    <div class="card shadow-sm mb-3">
+        <div class="card-header py-2">
+            <i class="bi bi-heart-pulse me-2"></i>Dados de saúde
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">{{ form.plano_saude.label.text }}</label>
+                    <input type="text" name="plano_saude" class="form-control"
+                        value="{{ form.plano_saude.data or '' }}" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">{{ form.numero_carteirinha.label.text }}</label>
+                    <input type="text" name="numero_carteirinha" class="form-control"
+                        value="{{ form.numero_carteirinha.data or '' }}" />
+                </div>
+                <div class="col-12">
+                    <label class="form-label text-danger fw-semibold">
+                        <i class="bi bi-exclamation-triangle me-1"></i>{{ form.alergias.label.text }}
+                    </label>
+                    <textarea name="alergias" class="form-control" rows="2"
+                        placeholder="Ex: Dipirona, Penicilina, látex...">{{ form.alergias.data or '' }}</textarea>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">{{ form.observacoes_clinicas.label.text }}</label>
+                    <textarea name="observacoes_clinicas" class="form-control" rows="2">{{ form.observacoes_clinicas.data or '' }}</textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ------------------------------------------------------------------ #}
+    {# Endereço #}
+    {# ------------------------------------------------------------------ #}
+    <div class="card shadow-sm mb-3">
+        <div class="card-header py-2">
+            <i class="bi bi-geo-alt me-2"></i>Endereço
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-2">
+                    <label class="form-label">{{ form.cep.label.text }}</label>
+                    <input type="text" name="cep" id="cep" class="form-control"
+                        value="{{ form.cep.data or '' }}" placeholder="00000-000"
+                        hx-get="/static/js/cep.js"
+                        maxlength="9" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">{{ form.tipo_logradouro.label.text }}</label>
+                    <select name="tipo_logradouro" class="form-select">
+                        {% for val, label in form.tipo_logradouro.choices %}
+                        <option value="{{ val }}" {% if form.tipo_logradouro.data == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label">{{ form.logradouro.label.text }}</label>
+                    <input type="text" name="logradouro" id="logradouro" class="form-control"
+                        value="{{ form.logradouro.data or '' }}" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">{{ form.numero.label.text }}</label>
+                    <input type="text" name="numero" class="form-control" value="{{ form.numero.data or '' }}" />
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">{{ form.zona.label.text }}</label>
+                    <select name="zona" class="form-select">
+                        {% for val, label in form.zona.choices %}
+                        <option value="{{ val }}" {% if form.zona.data == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">{{ form.complemento.label.text }}</label>
+                    <input type="text" name="complemento" class="form-control" value="{{ form.complemento.data or '' }}" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">{{ form.bairro.label.text }}</label>
+                    <input type="text" name="bairro" id="bairro" class="form-control" value="{{ form.bairro.data or '' }}" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">{{ form.cidade.label.text }}</label>
+                    <input type="text" name="cidade" id="cidade" class="form-control" value="{{ form.cidade.data or 'Pedralva' }}" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">{{ form.uf.label.text }}</label>
+                    <select name="uf" id="uf" class="form-select">
+                        {% for val, label in form.uf.choices %}
+                        <option value="{{ val }}" {% if form.uf.data == val or (not form.uf.data and val == 'MG') %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ------------------------------------------------------------------ #}
+    {# Contato #}
+    {# ------------------------------------------------------------------ #}
+    <div class="card shadow-sm mb-3">
+        <div class="card-header py-2">
+            <i class="bi bi-telephone me-2"></i>Contato e Filiação
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">{{ form.telefone.label.text }}</label>
+                    <input type="tel" name="telefone" class="form-control"
+                        value="{{ form.telefone.data or '' }}" placeholder="(35) 9 9999-9999" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">{{ form.telefone2.label.text }}</label>
+                    <input type="tel" name="telefone2" class="form-control"
+                        value="{{ form.telefone2.data or '' }}" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">{{ form.email.label.text }}</label>
+                    <input type="email" name="email" class="form-control"
+                        value="{{ form.email.data or '' }}" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">{{ form.nome_mae.label.text }}</label>
+                    <input type="text" name="nome_mae" class="form-control text-uppercase"
+                        value="{{ form.nome_mae.data or '' }}" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">{{ form.nome_pai.label.text }}</label>
+                    <input type="text" name="nome_pai" class="form-control text-uppercase"
+                        value="{{ form.nome_pai.data or '' }}" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ------------------------------------------------------------------ #}
+    {# Responsável #}
+    {# ------------------------------------------------------------------ #}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header py-2">
+            <i class="bi bi-person-check me-2"></i>Responsável / Representante legal
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-5">
+                    <label class="form-label">{{ form.responsavel_nome.label.text }}</label>
+                    <input type="text" name="responsavel_nome" class="form-control"
+                        value="{{ form.responsavel_nome.data or '' }}" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">{{ form.responsavel_grau.label.text }}</label>
+                    <input type="text" name="responsavel_grau" class="form-control"
+                        value="{{ form.responsavel_grau.data or '' }}" placeholder="mãe, pai..." />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">{{ form.responsavel_cpf.label.text }}</label>
+                    <input type="text" name="responsavel_cpf" class="form-control"
+                        value="{{ form.responsavel_cpf.data or '' }}" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">{{ form.responsavel_telefone.label.text }}</label>
+                    <input type="tel" name="responsavel_telefone" class="form-control"
+                        value="{{ form.responsavel_telefone.data or '' }}" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2 justify-content-end">
+        <a href="{{ url_for('pacientes.listar') }}" class="btn btn-outline-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-lg me-1"></i>{{ form.submit.label.text }}
+        </button>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Preenchimento automático de endereço via ViaCEP
+document.getElementById('cep').addEventListener('blur', function() {
+    const cep = this.value.replace(/\D/g,'');
+    if (cep.length !== 8) return;
+    fetch(`https://viacep.com.br/ws/${cep}/json/`)
+        .then(r => r.json())
+        .then(d => {
+            if (d.erro) return;
+            document.getElementById('logradouro').value = d.logradouro || '';
+            document.getElementById('bairro').value = d.bairro || '';
+            document.getElementById('cidade').value = d.localidade || '';
+            document.getElementById('uf').value = d.uf || 'MG';
+        })
+        .catch(() => {});
+});
+</script>
+{% endblock %}

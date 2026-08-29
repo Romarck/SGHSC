@@ -1,0 +1,35 @@
+# PDA-SQUAD — Configuração do Projeto
+# Gerado automaticamente pelo installer
+
+project:
+  name: "SGHSC"
+  type: "greenfield"
+  version: "1.0.0"
+  installedAt: "2026-08-28T14:58:50.537Z"
+
+stack:
+  backend: "Outro"
+  frontend: "Outro"
+  database: "PostgreSQL"
+
+ide:
+  selected: "kiro"
+
+agents:
+  - po
+  - architect
+  - dev
+  - ux
+  - si
+  - qadv
+
+docs:
+  prd: "docs/prd.md"
+  architecture: "docs/architecture.md"
+  datamodel: "docs/datamodel.md"
+  stories: "docs/stories/"
+  decisions: "docs/decisions/"
+  security: "docs/security/"
+
+pdaSquad:
+  version: "1.0.0"

@@ -1,0 +1,45 @@
+{% extends "layout.html" %}
+{% block title %}Grades de Agenda{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-gear me-2"></i>Configuração de Agendas</h4>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('ambulatorio.nova_agenda') }}" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus me-1"></i>Nova agenda
+        </a>
+        <a href="{{ url_for('ambulatorio.agenda') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Voltar
+        </a>
+    </div>
+</div>
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        {% if agendas %}
+        <table class="table table-hover table-hospitalar mb-0">
+            <thead>
+                <tr><th>Médico</th><th>Especialidade</th><th>Dia</th><th>Horário</th><th>Duração</th><th>Vagas</th><th>Local</th></tr>
+            </thead>
+            <tbody>
+            {% for a in agendas %}
+            <tr>
+                <td>{{ a.medico.nome if a.medico else '—' }}</td>
+                <td>{{ a.especialidade }}</td>
+                <td>{{ a.dia_semana.name | capitalize }}</td>
+                <td>{{ a.hora_inicio.strftime('%H:%M') }} – {{ a.hora_fim.strftime('%H:%M') }}</td>
+                <td>{{ a.duracao_consulta_min }} min</td>
+                <td>{{ a.vagas_total }} ({{ a.vagas_reserva }} reserva)</td>
+                <td>{{ a.local or '—' }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="text-center text-muted py-5">
+            <i class="bi bi-calendar-x display-4"></i>
+            <p class="mt-2">Nenhuma agenda configurada.</p>
+            <a href="{{ url_for('ambulatorio.nova_agenda') }}" class="btn btn-primary">Configurar agenda</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

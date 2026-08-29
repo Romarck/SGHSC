@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+{% block title %}Lançar Resultado — {{ solic.numero }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-clipboard-data me-2 text-success"></i>Lançar Resultado — {{ solic.numero }}</h4>
+    <a href="{{ url_for('exames.detalhe', id=solic.id) }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Voltar
+    </a>
+</div>
+
+<div class="card bg-light border-0 mb-3">
+    <div class="card-body py-2 small">
+        <strong>Paciente:</strong> {{ solic.paciente.nome_exibicao }} &bull;
+        <strong>Solicitante:</strong> {{ solic.solicitante.nome }}
+    </div>
+</div>
+
+<form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="card shadow-sm">
+        <div class="card-body">
+            {% for item in solic.itens %}
+            <div class="border rounded p-3 mb-3">
+                <h6 class="fw-semibold">{{ item.nome_exame }}</h6>
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <label class="form-label small">Resultado</label>
+                        <input type="text" name="valor_{{ item.id }}" class="form-control form-control-sm"
+                               value="{{ item.resultado.valor if item.resultado else '' }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small">Unidade</label>
+                        <input type="text" name="unidade_{{ item.id }}" class="form-control form-control-sm"
+                               value="{{ item.resultado.unidade if item.resultado else '' }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small">Valor de referência</label>
+                        <input type="text" name="ref_{{ item.id }}" class="form-control form-control-sm"
+                               value="{{ item.resultado.valor_referencia if item.resultado else '' }}">
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="alterado_{{ item.id }}"
+                                   id="alt_{{ item.id }}" {% if item.resultado and item.resultado.alterado %}checked{% endif %}>
+                            <label class="form-check-label small text-danger" for="alt_{{ item.id }}">
+                                Fora do valor de referência
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small">Laudo / observações (imagem, anatomopatológico)</label>
+                        <textarea name="laudo_{{ item.id }}" class="form-control form-control-sm" rows="2">{{ item.resultado.laudo if item.resultado else '' }}</textarea>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            <div class="d-flex justify-content-end">
+                <button type="submit" class="btn btn-success px-4">
+                    <i class="bi bi-check-lg me-1"></i>Salvar resultados
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}

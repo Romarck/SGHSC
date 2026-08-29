@@ -1,0 +1,106 @@
+{% extends "layout.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block main_class %}{% endblock %}
+
+{% block content %}
+<div class="min-vh-100 d-flex align-items-center justify-content-center bg-light">
+    <div class="card shadow-sm" style="width: 100%; max-width: 420px;">
+
+        <!-- Header do card -->
+        <div class="card-header bg-primary text-white text-center py-4">
+            <i class="bi bi-hospital display-5 d-block mb-2"></i>
+            <h5 class="mb-0 fw-bold">SGHSC</h5>
+            <small>{{ instituicao_nome }}</small>
+        </div>
+
+        <div class="card-body p-4">
+            <h6 class="text-muted text-center mb-4">Acesso ao sistema</h6>
+
+            <form method="POST" action="{{ url_for('auth.login') }}" novalidate>
+                {{ form.hidden_tag() }}
+
+                <!-- Usuário -->
+                <div class="mb-3">
+                    <label for="username" class="form-label">
+                        <i class="bi bi-person me-1"></i>{{ form.username.label.text }}
+                    </label>
+                    <input type="text"
+                           id="username"
+                           name="username"
+                           class="form-control {% if form.username.errors %}is-invalid{% endif %}"
+                           value="{{ form.username.data or '' }}"
+                           autocomplete="username"
+                           autofocus
+                           placeholder="seu.usuario" />
+                    {% for error in form.username.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- Senha -->
+                <div class="mb-3">
+                    <label for="senha" class="form-label">
+                        <i class="bi bi-lock me-1"></i>{{ form.senha.label.text }}
+                    </label>
+                    <div class="input-group">
+                        <input type="password"
+                               id="senha"
+                               name="senha"
+                               class="form-control {% if form.senha.errors %}is-invalid{% endif %}"
+                               autocomplete="current-password"
+                               placeholder="••••••••" />
+                        <button class="btn btn-outline-secondary" type="button"
+                                onclick="toggleSenha()"
+                                title="Mostrar/ocultar senha">
+                            <i class="bi bi-eye" id="icone-senha"></i>
+                        </button>
+                        {% for error in form.senha.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Lembrar (oculto quando desabilitado — estações compartilhadas) -->
+                {% if config.LOGIN_REMEMBER_HABILITADO %}
+                <div class="mb-4 form-check">
+                    <input type="checkbox" class="form-check-input"
+                           id="lembrar" name="lembrar"
+                           {% if form.lembrar.data %}checked{% endif %} />
+                    <label class="form-check-label text-muted small" for="lembrar">
+                        {{ form.lembrar.label.text }}
+                    </label>
+                </div>
+                {% else %}
+                <div class="mb-4"></div>
+                {% endif %}
+
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Entrar
+                </button>
+            </form>
+        </div>
+
+        <div class="card-footer text-center text-muted small py-3">
+            Problemas de acesso? Contate o administrador do sistema.
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleSenha() {
+    const campo = document.getElementById('senha');
+    const icone = document.getElementById('icone-senha');
+    if (campo.type === 'password') {
+        campo.type = 'text';
+        icone.className = 'bi bi-eye-slash';
+    } else {
+        campo.type = 'password';
+        icone.className = 'bi bi-eye';
+    }
+}
+</script>
+{% endblock %}

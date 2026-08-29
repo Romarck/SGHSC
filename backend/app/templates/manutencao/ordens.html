@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+{% block title %}Manutenção — Ordens de serviço{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-tools me-2 text-warning"></i>Ordens de serviço</h4>
+    <a href="{{ url_for('manutencao.nova_ordem') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Nova ordem</a>
+</div>
+
+<div class="btn-group mb-3">
+    <a href="{{ url_for('manutencao.ordens') }}" class="btn btn-sm {% if not status_atual %}btn-primary{% else %}btn-outline-primary{% endif %}">Todas</a>
+    {% for e in StatusOS %}
+    <a href="{{ url_for('manutencao.ordens', status=e.name) }}" class="btn btn-sm {% if status_atual == e.name %}btn-primary{% else %}btn-outline-primary{% endif %}">{{ e.value }}</a>
+    {% endfor %}
+</div>
+
+<div class="card shadow-sm"><div class="card-body p-0">
+{% if ordens %}
+<div class="table-responsive"><table class="table table-hover mb-0">
+    <thead class="table-light"><tr><th>Número</th><th>Título</th><th>Tipo</th><th>Prioridade</th><th>Local</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for o in ordens %}
+    <tr>
+        <td><code>{{ o.numero }}</code></td>
+        <td class="fw-semibold">{{ o.titulo }}</td>
+        <td class="small">{{ o.tipo.value }}</td>
+        <td>
+            <span class="badge {% if o.prioridade.name == 'URGENTE' %}bg-danger{% elif o.prioridade.name == 'ALTA' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">{{ o.prioridade.value }}</span>
+        </td>
+        <td class="small">{{ o.local }}</td>
+        <td><span class="badge bg-{{ o.cor_status }}">{{ o.status.value }}</span></td>
+        <td><a href="{{ url_for('manutencao.detalhe_ordem', id=o.id) }}" class="btn btn-sm btn-outline-primary py-0"><i class="bi bi-eye"></i></a></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table></div>
+{% else %}
+<div class="text-center text-muted py-5"><i class="bi bi-tools display-4"></i><p class="mt-2">Nenhuma ordem de serviço cadastrada.</p></div>
+{% endif %}
+</div></div>
+{% endblock %}

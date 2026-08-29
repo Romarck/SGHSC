@@ -1,0 +1,97 @@
+{% extends "layout.html" %}
+{% block title %}Transferência de Leito — {{ internacao.paciente.nome_exibicao }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">
+        <i class="bi bi-arrow-left-right me-2 text-warning"></i>Transferência de Leito
+    </h4>
+    <a href="{{ url_for('internacao.prontuario', id=internacao.id) }}"
+       class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Voltar ao prontuário
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-7">
+
+        {# Resumo da situação atual #}
+        <div class="card border-warning mb-3">
+            <div class="card-body py-2">
+                <div class="row g-2 small">
+                    <div class="col-sm-6">
+                        <strong>Paciente:</strong> {{ internacao.paciente.nome_exibicao }}
+                    </div>
+                    <div class="col-sm-6">
+                        <strong>Internação:</strong> {{ internacao.numero }}
+                    </div>
+                    <div class="col-sm-6">
+                        <strong>Leito atual:</strong>
+                        <span class="badge bg-danger ms-1">
+                            {{ internacao.leito.numero }}
+                        </span>
+                        — {{ internacao.leito.tipo.value }}
+                        {% if internacao.leito.ala %}({{ internacao.leito.ala }}){% endif %}
+                    </div>
+                    <div class="col-sm-6">
+                        <strong>Dias internado:</strong> {{ internacao.dias_internado }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header py-2 bg-warning text-dark">
+                <i class="bi bi-arrow-left-right me-2"></i>Dados da Transferência
+            </div>
+            <div class="card-body">
+                <form method="POST" novalidate>
+                    {{ form.hidden_tag() }}
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Leito destino *</label>
+                        <select name="leito_destino_id"
+                                class="form-select {% if form.leito_destino_id.errors %}is-invalid{% endif %}">
+                            {% for val, label in form.leito_destino_id.choices %}
+                            <option value="{{ val }}"
+                                {% if form.leito_destino_id.data == val %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        {% for e in form.leito_destino_id.errors %}
+                        <div class="invalid-feedback">{{ e }}</div>
+                        {% endfor %}
+                        <div class="form-text text-muted">
+                            Apenas leitos livres ou reservados são exibidos.
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Motivo da transferência</label>
+                        <input type="text" name="motivo" class="form-control"
+                               value="{{ form.motivo.data or '' }}"
+                               placeholder="Ex: Alta da UTI, solicitação do paciente, limpeza de leito...">
+                    </div>
+
+                    <div class="alert alert-info py-2 small">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Após a transferência, o leito atual ficará com status
+                        <strong>Limpeza</strong> e o destino será marcado como
+                        <strong>Ocupado</strong> automaticamente.
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{{ url_for('internacao.prontuario', id=internacao.id) }}"
+                           class="btn btn-outline-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-warning text-dark px-4">
+                            <i class="bi bi-arrow-left-right me-1"></i>Confirmar transferência
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

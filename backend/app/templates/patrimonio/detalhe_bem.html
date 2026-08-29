@@ -1,0 +1,70 @@
+{% extends "layout.html" %}
+{% block title %}Patrimônio — {{ bem.numero_patrimonio }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-building-gear me-2 text-secondary"></i>{{ bem.descricao }}</h4>
+    <a href="{{ url_for('patrimonio.bens') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-7">
+        <div class="card shadow-sm"><div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-4">Nº patrimônio</dt><dd class="col-sm-8"><code>{{ bem.numero_patrimonio }}</code></dd>
+                <dt class="col-sm-4">Descrição</dt><dd class="col-sm-8">{{ bem.descricao }}</dd>
+                <dt class="col-sm-4">Categoria</dt><dd class="col-sm-8">{{ bem.categoria }}</dd>
+                <dt class="col-sm-4">Marca</dt><dd class="col-sm-8">{{ bem.marca }}</dd>
+                <dt class="col-sm-4">Modelo</dt><dd class="col-sm-8">{{ bem.modelo }}</dd>
+                <dt class="col-sm-4">Nº série</dt><dd class="col-sm-8">{{ bem.numero_serie }}</dd>
+                <dt class="col-sm-4">Localização</dt><dd class="col-sm-8">{{ bem.localizacao }}</dd>
+                <dt class="col-sm-4">Situação</dt><dd class="col-sm-8"><span class="badge bg-secondary">{{ bem.situacao.value }}</span></dd>
+                {% if bem.estado %}<dt class="col-sm-4">Conservação</dt><dd class="col-sm-8">{{ bem.estado.value }}</dd>{% endif %}
+                <dt class="col-sm-4">Valor de aquisição</dt><dd class="col-sm-8">R$ {{ '%.2f'|format(bem.valor_aquisicao) }}</dd>
+                <dt class="col-sm-4">Valor atual estimado</dt><dd class="col-sm-8">R$ {{ '%.2f'|format(bem.valor_atual_estimado) }}</dd>
+                <dt class="col-sm-4">Depreciação anual</dt><dd class="col-sm-8">R$ {{ '%.2f'|format(bem.depreciacao_anual) }}</dd>
+            </dl>
+        </div></div>
+    </div>
+    <div class="col-md-5">
+        <div class="card shadow-sm"><div class="card-body">
+            <h6 class="mb-3">Movimentar bem</h6>
+            <form method="POST" action="{{ url_for('patrimonio.mover_bem', id=bem.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Localização destino</label>
+                    <input type="text" name="localizacao_destino" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Motivo</label>
+                    <input type="text" name="motivo" class="form-control">
+                </div>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-arrow-left-right me-1"></i>Mover</button>
+                </div>
+            </form>
+        </div></div>
+    </div>
+</div>
+
+<div class="card shadow-sm mt-3"><div class="card-body p-0">
+    <div class="p-3 border-bottom"><h6 class="mb-0">Movimentações</h6></div>
+    {% if bem.movimentacoes %}
+    <div class="table-responsive"><table class="table table-hover mb-0">
+        <thead class="table-light"><tr><th>Data</th><th>Origem</th><th>Destino</th><th>Responsável</th></tr></thead>
+        <tbody>
+        {% for m in bem.movimentacoes %}
+        <tr>
+            <td class="text-muted">{{ m.data.strftime('%d/%m/%Y') }}</td>
+            <td>{{ m.localizacao_origem }}</td>
+            <td>{{ m.localizacao_destino }}</td>
+            <td>{{ m.responsavel.nome }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table></div>
+    {% else %}
+    <div class="text-center text-muted py-4"><i class="bi bi-arrow-left-right display-6"></i><p class="mt-2 mb-0">Nenhuma movimentação registrada.</p></div>
+    {% endif %}
+</div></div>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+{% block title %}Compras — Solicitações{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-cart-plus me-2 text-primary"></i>Solicitações de compra</h4>
+    <a href="{{ url_for('compras.nova_solicitacao') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Nova solicitação</a>
+</div>
+
+<div class="card shadow-sm"><div class="card-body p-0">
+{% if solicitacoes %}
+<div class="table-responsive"><table class="table table-hover mb-0">
+    <thead class="table-light"><tr><th>Número</th><th>Solicitante</th><th>Status</th><th>Data</th></tr></thead>
+    <tbody>
+    {% for s in solicitacoes %}
+    <tr>
+        <td><code>{{ s.numero }}</code></td>
+        <td class="fw-semibold">{{ s.solicitante.nome }}</td>
+        <td><span class="badge bg-secondary">{{ s.status.value }}</span></td>
+        <td class="text-muted">{{ s.criado_em.strftime('%d/%m/%Y') }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table></div>
+{% else %}
+<div class="text-center text-muted py-5"><i class="bi bi-cart-plus display-4"></i><p class="mt-2">Nenhuma solicitação cadastrada.</p></div>
+{% endif %}
+</div></div>
+{% endblock %}

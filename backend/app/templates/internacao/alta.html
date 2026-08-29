@@ -1,0 +1,174 @@
+{% extends "layout.html" %}
+{% block title %}Alta Hospitalar — {{ internacao.paciente.nome_exibicao }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">
+        <i class="bi bi-box-arrow-up-right me-2 text-success"></i>Alta Hospitalar
+    </h4>
+    <a href="{{ url_for('internacao.prontuario', id=internacao.id) }}"
+       class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Voltar ao prontuário
+    </a>
+</div>
+
+{# Resumo da internação #}
+<div class="card border-success mb-3">
+    <div class="card-header py-2 bg-success text-white">
+        <i class="bi bi-hospital me-2"></i>Resumo da Internação
+    </div>
+    <div class="card-body">
+        <div class="row g-2 small">
+            <div class="col-sm-4">
+                <strong>Paciente:</strong><br>
+                {{ internacao.paciente.nome_exibicao }}<br>
+                <span class="text-muted">{{ internacao.paciente.idade }} anos</span>
+            </div>
+            <div class="col-sm-4">
+                <strong>Internação:</strong> {{ internacao.numero }}<br>
+                <strong>Leito:</strong> {{ internacao.leito.numero }} — {{ internacao.leito.tipo.value }}<br>
+                <strong>Convênio:</strong> {{ internacao.convenio or 'SUS' }}
+            </div>
+            <div class="col-sm-4">
+                <strong>Admissão:</strong> {{ internacao.admissao_em.strftime('%d/%m/%Y %H:%M') }}<br>
+                <strong>Dias internado:</strong>
+                <span class="badge bg-secondary">{{ internacao.dias_internado }} dias</span><br>
+                <strong>Médico:</strong> {{ internacao.medico_responsavel.nome }}
+            </div>
+            {% if internacao.hipotese_diagnostica %}
+            <div class="col-12">
+                <strong>Hipótese diagnóstica de entrada:</strong>
+                {{ internacao.hipotese_diagnostica }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<form method="POST" novalidate>
+    {{ form.hidden_tag() }}
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-header py-2">
+            <i class="bi bi-clipboard-check me-2"></i>Dados da Alta
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+
+                <div class="col-sm-6">
+                    <label class="form-label fw-semibold">Tipo de alta *</label>
+                    <select name="tipo_alta"
+                            class="form-select {% if form.tipo_alta.errors %}is-invalid{% endif %}"
+                            id="tipo_alta">
+                        {% for val, label in form.tipo_alta.choices %}
+                        <option value="{{ val }}"
+                            {% if form.tipo_alta.data == val %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    {% for e in form.tipo_alta.errors %}
+                    <div class="invalid-feedback">{{ e }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="col-sm-6">
+                    <label class="form-label fw-semibold">Condição na alta *</label>
+                    <select name="condicao_alta"
+                            class="form-select {% if form.condicao_alta.errors %}is-invalid{% endif %}">
+                        {% for val, label in form.condicao_alta.choices %}
+                        <option value="{{ val }}"
+                            {% if form.condicao_alta.data == val %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    {% for e in form.condicao_alta.errors %}
+                    <div class="invalid-feedback">{{ e }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="col-sm-8">
+                    <label class="form-label fw-semibold">Diagnóstico principal na alta</label>
+                    <input type="text" name="diagnostico_principal_alta" class="form-control"
+                           value="{{ form.diagnostico_principal_alta.data or '' }}"
+                           placeholder="Diagnóstico definitivo">
+                </div>
+
+                <div class="col-sm-4">
+                    <label class="form-label fw-semibold">Retorno em (dias)</label>
+                    <input type="number" name="retorno_dias" class="form-control"
+                           value="{{ form.retorno_dias.data or '' }}"
+                           min="1" max="365" placeholder="30"
+                           id="campo-retorno">
+                    <div class="form-text">Deixe em branco se não houver retorno agendado.</div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-header py-2">
+            <i class="bi bi-file-text me-2"></i>Laudo de Alta
+            <span class="badge bg-info text-dark ms-2">Será gerado em PDF automaticamente</span>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+
+                <div class="col-12">
+                    <label class="form-label fw-semibold">
+                        Resumo da internação *
+                        <span class="text-muted fw-normal small">(será impresso no laudo)</span>
+                    </label>
+                    <textarea name="resumo_alta"
+                              class="form-control {% if form.resumo_alta.errors %}is-invalid{% endif %}"
+                              rows="6"
+                              placeholder="Paciente admitido em... evolução clínica... exames realizados... procedimentos... condição na alta...">{{ form.resumo_alta.data or '' }}</textarea>
+                    {% for e in form.resumo_alta.errors %}
+                    <div class="invalid-feedback">{{ e }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Orientações ao paciente / familiar</label>
+                    <textarea name="orientacoes_alta" class="form-control" rows="4"
+                              placeholder="Medicações em uso após alta... restrições... sinais de alarme para retorno... consulta de retorno...">{{ form.orientacoes_alta.data or '' }}</textarea>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    {# Alerta para óbito #}
+    <div id="alerta-obito" class="alert alert-danger d-none py-2">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <strong>Atenção:</strong> Tipo de alta "Óbito" selecionado.
+        Certifique-se de registrar a declaração de óbito conforme protocolo da instituição.
+    </div>
+
+    <div class="d-flex justify-content-end gap-2">
+        <a href="{{ url_for('internacao.prontuario', id=internacao.id) }}"
+           class="btn btn-outline-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-success px-4">
+            <i class="bi bi-check-circle me-2"></i>Confirmar alta e gerar laudo
+        </button>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('tipo_alta').addEventListener('change', function() {
+    const alerta = document.getElementById('alerta-obito');
+    const retorno = document.getElementById('campo-retorno');
+    if (this.value === 'OBITO') {
+        alerta.classList.remove('d-none');
+        retorno.closest('.col-sm-4').style.display = 'none';
+    } else {
+        alerta.classList.add('d-none');
+        retorno.closest('.col-sm-4').style.display = '';
+    }
+});
+</script>
+{% endblock %}

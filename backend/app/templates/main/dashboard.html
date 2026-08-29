@@ -1,0 +1,145 @@
+{% extends "layout.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0"><i class="bi bi-speedometer2 me-2 text-primary"></i>Painel Principal</h4>
+        <small class="text-muted">{{ instituicao_nome }}</small>
+    </div>
+    <span class="text-muted small" id="relogio"></span>
+</div>
+
+{# Contadores em tempo real via HTMX #}
+<div class="row g-3 mb-4"
+     hx-get="{{ url_for('main.contadores') }}"
+     hx-push-url="false"
+     hx-trigger="load, every 60s"
+     hx-swap="innerHTML">
+    <div class="col-12 text-center text-muted py-3">
+        <div class="spinner-border spinner-border-sm me-2"></div>Carregando contadores...
+    </div>
+</div>
+
+{# Acesso rápido aos módulos #}
+<div class="row g-3">
+
+    <div class="col-6 col-md-4 col-xl-3">
+        <a href="{{ url_for('pacientes.listar') }}" class="text-decoration-none">
+            <div class="card h-100 border-info text-center card-modulo">
+                <div class="card-body py-4">
+                    <i class="bi bi-people display-5 text-info mb-3 d-block"></i>
+                    <h6 class="card-title mb-0">Pacientes</h6>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-6 col-md-4 col-xl-3">
+        <a href="{{ url_for('emergencia.fila') }}" class="text-decoration-none">
+            <div class="card h-100 border-danger text-center card-modulo">
+                <div class="card-body py-4">
+                    <i class="bi bi-heart-pulse display-5 text-danger mb-3 d-block"></i>
+                    <h6 class="card-title mb-0">Emergência / PA</h6>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-6 col-md-4 col-xl-3">
+        <a href="{{ url_for('ambulatorio.agenda') }}" class="text-decoration-none">
+            <div class="card h-100 border-success text-center card-modulo">
+                <div class="card-body py-4">
+                    <i class="bi bi-calendar-check display-5 text-success mb-3 d-block"></i>
+                    <h6 class="card-title mb-0">Ambulatório</h6>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-6 col-md-4 col-xl-3">
+        <a href="{{ url_for('internacao.mapa_leitos') }}" class="text-decoration-none">
+            <div class="card h-100 border-warning text-center card-modulo">
+                <div class="card-body py-4">
+                    <i class="bi bi-hospital display-5 text-warning mb-3 d-block"></i>
+                    <h6 class="card-title mb-0">Internação / Leitos</h6>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    {# Fase 4 — Apoio Clínico #}
+    {% for mod in [
+        ('exames.listar', 'bi-file-medical', 'info', 'Exames'),
+        ('farmacia.estoque', 'bi-capsule', 'warning', 'Farmácia'),
+        ('nutricao.mapa_dietas', 'bi-egg-fried', 'success', 'Nutrição'),
+        ('cirurgias.escala', 'bi-scissors', 'primary', 'Centro Cirúrgico'),
+        ('maternidade.painel', 'bi-gender-female', 'danger', 'Maternidade'),
+        ('ccih.painel', 'bi-shield-plus', 'danger', 'CCIH'),
+        ('certificado.painel', 'bi-patch-check', 'primary', 'Certificação Digital'),
+    ] %}
+    <div class="col-6 col-md-4 col-xl-3">
+        <a href="{{ url_for(mod[0]) }}" class="text-decoration-none">
+            <div class="card h-100 border-{{ mod[2] }} text-center card-modulo">
+                <div class="card-body py-4">
+                    <i class="bi {{ mod[1] }} display-5 text-{{ mod[2] }} mb-3 d-block"></i>
+                    <h6 class="card-title mb-0">{{ mod[3] }}</h6>
+                </div>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+
+    {# Fase 5 — Administrativo #}
+    {% for mod in [
+        ('estoque.produtos', 'bi-box-seam', 'secondary', 'Estoque'),
+        ('compras.solicitacoes', 'bi-cart', 'primary', 'Compras'),
+        ('financeiro.contas', 'bi-cash-coin', 'success', 'Financeiro'),
+        ('faturamento.guias', 'bi-receipt', 'dark', 'Faturamento SUS'),
+        ('convenios.guias', 'bi-file-earmark-medical', 'info', 'Convênios'),
+        ('patrimonio.bens', 'bi-pc-display', 'secondary', 'Patrimônio'),
+        ('rh.funcionarios', 'bi-people-fill', 'primary', 'RH'),
+        ('manutencao.ordens', 'bi-tools', 'warning', 'Manutenção'),
+        ('relatorios.dashboard', 'bi-graph-up-arrow', 'primary', 'Dashboard Gerencial'),
+        ('residuos.painel', 'bi-trash3', 'success', 'Resíduos (PGRSS)'),
+        ('rnds.fila', 'bi-cloud-arrow-up', 'info', 'RNDS'),
+    ] %}
+    <div class="col-6 col-md-4 col-xl-3">
+        <a href="{{ url_for(mod[0]) }}" class="text-decoration-none">
+            <div class="card h-100 border-{{ mod[2] }} text-center card-modulo">
+                <div class="card-body py-4">
+                    <i class="bi {{ mod[1] }} display-5 text-{{ mod[2] }} mb-3 d-block"></i>
+                    <h6 class="card-title mb-0">{{ mod[3] }}</h6>
+                </div>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+
+    {# Guia de uso #}
+    <div class="col-6 col-md-4 col-xl-3">
+        <a href="{{ url_for('main.guia') }}" target="_blank" class="text-decoration-none">
+            <div class="card h-100 border-info text-center card-modulo">
+                <div class="card-body py-4">
+                    <i class="bi bi-question-circle display-5 text-info mb-3 d-block"></i>
+                    <h6 class="card-title mb-0">Guia de Uso</h6>
+                </div>
+            </div>
+        </a>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function atualizarRelogio() {
+    const agora = new Date();
+    document.getElementById('relogio').textContent =
+        agora.toLocaleDateString('pt-BR', {weekday:'long', day:'2-digit', month:'long'}) +
+        ' — ' + agora.toLocaleTimeString('pt-BR');
+}
+atualizarRelogio();
+setInterval(atualizarRelogio, 1000);
+</script>
+{% endblock %}

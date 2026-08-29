@@ -1,0 +1,147 @@
+{% extends "layout.html" %}
+{% block title %}Pronto-Atendimento{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-heart-pulse me-2 text-danger"></i>Pronto-Atendimento / Emergência</h4>
+    <div class="d-flex gap-2">
+        <span class="badge bg-secondary fs-6">{{ finalizados_hoje }} finalizados hoje</span>
+        <a href="{{ url_for('emergencia.registrar_chegada') }}" class="btn btn-danger">
+            <i class="bi bi-person-plus me-1"></i>Registrar chegada
+        </a>
+    </div>
+</div>
+
+{# Contadores por cor Manchester #}
+{% set aguardando = ativos | selectattr('status.value', 'equalto', 'aguardando triagem') | list %}
+{% set triados = ativos | selectattr('status.value', 'equalto', 'triado') | list %}
+{% set em_atend = ativos | selectattr('status.value', 'equalto', 'em atendimento') | list %}
+
+<div class="row g-2 mb-3">
+    <div class="col-6 col-md-3">
+        <div class="card text-center border-warning">
+            <div class="card-body py-2">
+                <div class="fs-3 fw-bold text-warning">{{ aguardando | length }}</div>
+                <small class="text-muted">Aguardando triagem</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center border-info">
+            <div class="card-body py-2">
+                <div class="fs-3 fw-bold text-info">{{ triados | length }}</div>
+                <small class="text-muted">Triados / aguardando médico</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center border-primary">
+            <div class="card-body py-2">
+                <div class="fs-3 fw-bold text-primary">{{ em_atend | length }}</div>
+                <small class="text-muted">Em atendimento</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center border-secondary">
+            <div class="card-body py-2">
+                <div class="fs-3 fw-bold text-secondary">{{ ativos | length }}</div>
+                <small class="text-muted">Total na fila</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Fila de pacientes #}
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        {% if ativos %}
+        <div class="table-responsive">
+            <table class="table table-hover table-hospitalar mb-0">
+                <thead>
+                    <tr>
+                        <th>Nº</th>
+                        <th>Paciente</th>
+                        <th>Chegada</th>
+                        <th>Espera</th>
+                        <th>Classificação</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for a in ativos %}
+                <tr class="{% if a.triagem %}risco-{{ a.triagem.classificacao.value }}{% endif %}">
+                    <td class="fw-bold">{{ a.numero }}</td>
+                    <td>
+                        <a href="{{ url_for('pacientes.detalhe', id=a.paciente_id) }}" class="text-decoration-none">
+                            {{ a.paciente.nome_exibicao }}
+                        </a>
+                        <br><small class="text-muted">{{ a.paciente.idade }} anos</small>
+                    </td>
+                    <td>{{ a.chegada_em.strftime('%H:%M') }}</td>
+                    <td>
+                        {% if a.tempo_espera_minutos is not none %}
+                            {{ a.tempo_espera_minutos }} min
+                        {% else %}
+                            {# calcula tempo desde chegada #}
+                            <span class="text-muted" id="espera-{{ a.id }}">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if a.triagem %}
+                        <span class="badge bg-{{ a.triagem.cor_badge }}">
+                            {{ a.triagem.classificacao.value | capitalize }}
+                        </span>
+                        {% else %}
+                        <span class="badge bg-light text-dark">Sem triagem</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge bg-secondary">{{ a.status.value }}</span>
+                    </td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            {% if not a.triagem %}
+                            <a href="{{ url_for('emergencia.triagem', id=a.id) }}"
+                               class="btn btn-sm btn-warning" title="Realizar triagem">
+                                <i class="bi bi-clipboard-pulse"></i>
+                            </a>
+                            {% endif %}
+                            <a href="{{ url_for('emergencia.atendimento', id=a.id) }}"
+                               class="btn btn-sm btn-primary" title="Atendimento médico">
+                                <i class="bi bi-stethoscope"></i>
+                            </a>
+                            <a href="{{ url_for('emergencia.saida', id=a.id) }}"
+                               class="btn btn-sm btn-outline-danger" title="Registrar saída">
+                                <i class="bi bi-box-arrow-right"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center text-muted py-5">
+            <i class="bi bi-check-circle display-4 text-success"></i>
+            <p class="mt-2">Fila vazia — nenhum paciente aguardando.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Atualiza a fila a cada 60 segundos via HTMX
+document.addEventListener('DOMContentLoaded', function() {
+    setInterval(() => {
+        if (document.visibilityState === 'visible') {
+            window.location.reload();
+        }
+    }, 60000);
+});
+</script>
+{% endblock %}

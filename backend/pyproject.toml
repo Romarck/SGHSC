@@ -1,0 +1,29 @@
+# Configuração do Ruff (lint) — SGHSC
+# Foco em erros reais (imports não usados, nomes indefinidos, bugs) sem ruído
+# de estilo que exigiria reformatar toda a base de uma vez.
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+extend-exclude = [
+    "migrations",       # código gerado pelo Alembic
+    "__pycache__",
+    "capturar_telas.py",
+    "gerar_guia_html.py",
+    "seed_demo.py",
+]
+
+[tool.ruff.lint]
+# E9/F = erros de sintaxe e do pyflakes (nomes indefinidos, imports/vars não usados)
+# B = flake8-bugbear (armadilhas comuns). I = ordenação de imports.
+select = ["E9", "F", "B", "I"]
+ignore = [
+    "E501",   # comprimento de linha (não bloquear CI por isso agora)
+    "B008",   # chamadas em defaults (padrão comum em Flask/SQLAlchemy)
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Testes podem ter imports "não usados" (fixtures) e asserts diversos.
+"tests/*" = ["F401", "F811"]
+# __init__ de models reexporta símbolos de propósito.
+"app/models/__init__.py" = ["F401"]

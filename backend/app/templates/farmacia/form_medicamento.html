@@ -1,0 +1,73 @@
+{% extends "layout.html" %}
+{% block title %}Novo Medicamento{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8">
+        <div class="d-flex align-items-center mb-3">
+            <a href="{{ url_for('farmacia.estoque') }}" class="btn btn-sm btn-outline-secondary me-3">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <h4 class="mb-0"><i class="bi bi-plus-lg me-2 text-warning"></i>Novo Medicamento</h4>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Código *</label>
+                            <input type="text" name="codigo" class="form-control" required>
+                        </div>
+                        <div class="col-md-9">
+                            <label class="form-label fw-semibold">Nome comercial *</label>
+                            <input type="text" name="nome" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Princípio ativo</label>
+                            <input type="text" name="principio_ativo" class="form-control">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Concentração</label>
+                            <input type="text" name="concentracao" class="form-control" placeholder="500mg">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Forma</label>
+                            <select name="forma" class="form-select">
+                                <option value="">—</option>
+                                {% for f in formas %}
+                                <option value="{{ f.name }}">{{ f.value }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Unidade de dispensação</label>
+                            <input type="text" name="unidade_dispensacao" class="form-control" placeholder="comprimido, mL...">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Estoque mínimo</label>
+                            <input type="number" name="estoque_minimo" class="form-control" value="0" min="0">
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="controlado" id="controlado" value="1">
+                                <label class="form-check-label" for="controlado">
+                                    Medicamento controlado (Port. 344/98)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <hr class="my-3">
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{{ url_for('farmacia.estoque') }}" class="btn btn-outline-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i>Cadastrar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends "layout.html" %}
+{% block title %}Notificação {{ notif.numero }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-clipboard2-pulse me-2 text-danger"></i>Notificação {{ notif.numero }}</h4>
+    <a href="{{ url_for('ccih.painel') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Voltar
+    </a>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-7">
+        <div class="card shadow-sm">
+            <div class="card-header py-2"><i class="bi bi-info-circle me-2"></i>Dados</div>
+            <div class="card-body">
+                <dl class="row mb-0 small">
+                    <dt class="col-sm-4">Paciente</dt>
+                    <dd class="col-sm-8">{{ notif.paciente.nome_exibicao }}</dd>
+                    <dt class="col-sm-4">Tipo</dt>
+                    <dd class="col-sm-8">{{ notif.tipo.value }}</dd>
+                    <dt class="col-sm-4">Topografia</dt>
+                    <dd class="col-sm-8">{{ notif.topografia or '—' }}</dd>
+                    <dt class="col-sm-4">Microrganismo</dt>
+                    <dd class="col-sm-8">{{ notif.microrganismo or '—' }}</dd>
+                    <dt class="col-sm-4">CID-10</dt>
+                    <dd class="col-sm-8">{{ notif.cid10 or '—' }}</dd>
+                    <dt class="col-sm-4">Notificado em</dt>
+                    <dd class="col-sm-8">{{ notif.data_notificacao.strftime('%d/%m/%Y %H:%M') }}</dd>
+                    <dt class="col-sm-4">Notificante</dt>
+                    <dd class="col-sm-8">{{ notif.notificante.nome }}</dd>
+                </dl>
+                {% if notif.antibiograma %}
+                <hr><strong class="small">Antibiograma:</strong>
+                <p class="small mb-0">{{ notif.antibiograma }}</p>
+                {% endif %}
+                {% if notif.descricao %}
+                <hr><strong class="small">Descrição:</strong>
+                <p class="small mb-0">{{ notif.descricao }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-5">
+        <div class="card shadow-sm">
+            <div class="card-header py-2"><i class="bi bi-pencil-square me-2"></i>Atualizar</div>
+            <div class="card-body">
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Status</label>
+                        <select name="status" class="form-select">
+                            {% for s in status_opcoes %}
+                            <option value="{{ s.name }}" {% if notif.status == s %}selected{% endif %}>
+                                {{ s.value | capitalize }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Conduta</label>
+                        <textarea name="conduta" class="form-control" rows="4">{{ notif.conduta or '' }}</textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-check-lg me-1"></i>Salvar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

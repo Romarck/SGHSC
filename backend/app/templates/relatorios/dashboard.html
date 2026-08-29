@@ -1,0 +1,121 @@
+{% extends "layout.html" %}
+{% block title %}Dashboard Gerencial{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-graph-up-arrow me-2 text-primary"></i>Dashboard Gerencial</h4>
+    <div class="btn-group">
+        {% for d in [7, 30, 90] %}
+        <a href="{{ url_for('relatorios.dashboard', dias=d) }}"
+           class="btn btn-sm {% if dias == d %}btn-primary{% else %}btn-outline-primary{% endif %}">{{ d }} dias</a>
+        {% endfor %}
+    </div>
+</div>
+
+{# Indicadores de leitos #}
+<h6 class="text-muted mt-2"><i class="bi bi-hospital me-1"></i>Ocupação Hospitalar</h6>
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card text-center border-primary"><div class="card-body py-3">
+            <div class="display-6 fw-bold text-primary">{{ dados.leitos.taxa_ocupacao }}%</div>
+            <small class="text-muted">Taxa de ocupação</small>
+        </div></div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center border-danger"><div class="card-body py-3">
+            <div class="display-6 fw-bold text-danger">{{ dados.leitos.ocupados }}</div>
+            <small class="text-muted">Leitos ocupados</small>
+        </div></div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center border-success"><div class="card-body py-3">
+            <div class="display-6 fw-bold text-success">{{ dados.leitos.livres }}</div>
+            <small class="text-muted">Leitos livres</small>
+        </div></div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center border-secondary"><div class="card-body py-3">
+            <div class="display-6 fw-bold text-secondary">{{ dados.leitos.total }}</div>
+            <small class="text-muted">Total de leitos</small>
+        </div></div>
+    </div>
+</div>
+
+{# Indicadores de internação #}
+<h6 class="text-muted"><i class="bi bi-clipboard2-pulse me-1"></i>Internação (últimos {{ dias }} dias)</h6>
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card text-center"><div class="card-body py-3">
+            <div class="fs-3 fw-bold">{{ dados.internacao.internacoes_ativas }}</div>
+            <small class="text-muted">Internações ativas</small>
+        </div></div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center"><div class="card-body py-3">
+            <div class="fs-3 fw-bold">{{ dados.internacao.altas_periodo }}</div>
+            <small class="text-muted">Altas no período</small>
+        </div></div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center"><div class="card-body py-3">
+            <div class="fs-3 fw-bold">{{ dados.internacao.media_permanencia }}</div>
+            <small class="text-muted">Média permanência (dias)</small>
+        </div></div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center"><div class="card-body py-3">
+            <div class="fs-3 fw-bold">{{ dados.internacao.giro_leitos }}</div>
+            <small class="text-muted">Giro de leitos</small>
+        </div></div>
+    </div>
+</div>
+
+{# Produção assistencial #}
+<h6 class="text-muted"><i class="bi bi-activity me-1"></i>Produção Assistencial (últimos {{ dias }} dias)</h6>
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-4">
+        <div class="card text-center border-danger"><div class="card-body py-3">
+            <div class="fs-3 fw-bold text-danger">{{ dados.producao.atendimentos_emergencia }}</div>
+            <small class="text-muted">Atendimentos PA</small>
+        </div></div>
+    </div>
+    <div class="col-6 col-md-4">
+        <div class="card text-center border-success"><div class="card-body py-3">
+            <div class="fs-3 fw-bold text-success">{{ dados.producao.consultas_ambulatorio }}</div>
+            <small class="text-muted">Consultas ambulatório</small>
+        </div></div>
+    </div>
+    <div class="col-6 col-md-4">
+        <div class="card text-center border-info"><div class="card-body py-3">
+            <div class="fs-3 fw-bold text-info">{{ dados.producao.novos_pacientes }}</div>
+            <small class="text-muted">Novos pacientes</small>
+        </div></div>
+    </div>
+</div>
+
+{# Distribuição de leitos por status #}
+<div class="card shadow-sm">
+    <div class="card-header py-2"><i class="bi bi-pie-chart me-2"></i>Distribuição de leitos por status</div>
+    <div class="card-body">
+        {% if dados.leitos.por_status %}
+        {% for status, qtd in dados.leitos.por_status.items() %}
+        {% set pct = (qtd / dados.leitos.total * 100) if dados.leitos.total else 0 %}
+        <div class="mb-2">
+            <div class="d-flex justify-content-between small">
+                <span>{{ status | capitalize }}</span><span>{{ qtd }} ({{ '%.0f' % pct }}%)</span>
+            </div>
+            <div class="progress" style="height:8px">
+                <div class="progress-bar" role="progressbar" style="width: {{ pct }}%"></div>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="text-center text-muted py-3">Nenhum leito cadastrado.</div>
+        {% endif %}
+    </div>
+</div>
+
+<p class="text-muted small mt-3">
+    <i class="bi bi-clock me-1"></i>Gerado em {{ dados.gerado_em.strftime('%d/%m/%Y %H:%M') }} (UTC)
+</p>
+{% endblock %}

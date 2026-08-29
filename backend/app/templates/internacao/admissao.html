@@ -1,0 +1,216 @@
+{% extends "layout.html" %}
+{% block title %}Admissão Hospitalar{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">
+        <i class="bi bi-person-plus me-2 text-warning"></i>Admissão Hospitalar
+    </h4>
+    <a href="{{ url_for('internacao.mapa_leitos') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Mapa de leitos
+    </a>
+</div>
+
+<div class="row g-3">
+    {# Busca de paciente #}
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-header py-2">
+                <i class="bi bi-search me-2"></i>Buscar paciente
+            </div>
+            <div class="card-body">
+                <input type="search"
+                       id="busca-paciente"
+                       class="form-control mb-2"
+                       placeholder="Nome, CPF ou CNS..."
+                       hx-get="{{ url_for('pacientes.busca_htmx') }}"
+                       hx-trigger="keyup changed delay:400ms"
+                       hx-target="#resultado-busca-int"
+                       name="q"
+                       autocomplete="off" />
+                <div id="resultado-busca-int" class="border rounded"></div>
+
+                {% if paciente %}
+                <div class="alert alert-success mt-2 py-1 small">
+                    <i class="bi bi-person-check me-1"></i>
+                    <strong>Selecionado:</strong> {{ paciente.nome_exibicao }} ({{ paciente.idade }} anos)
+                </div>
+                {% endif %}
+
+                <hr class="my-3">
+                <a href="{{ url_for('pacientes.novo') }}" class="btn btn-outline-secondary btn-sm w-100">
+                    <i class="bi bi-person-plus me-1"></i>Cadastrar novo paciente
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {# Formulário de admissão #}
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header py-2 bg-warning text-dark">
+                <i class="bi bi-hospital me-2"></i>Dados da Internação
+            </div>
+            <div class="card-body">
+                <form method="POST" id="form-admissao" novalidate>
+                    {{ form.hidden_tag() }}
+                    <input type="hidden" name="paciente_id" id="paciente_id_input"
+                           value="{{ form.paciente_id.data or '' }}" />
+
+                    {# Paciente selecionado #}
+                    <div id="paciente-selecionado" class="mb-3 {% if not paciente %}d-none{% endif %}">
+                        <label class="form-label fw-semibold">Paciente</label>
+                        <div class="form-control bg-light fw-semibold" id="nome-paciente-display">
+                            {{ paciente.nome_exibicao if paciente else '' }}
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        {# Leito #}
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">{{ form.leito_id.label.text }}</label>
+                            <select name="leito_id" id="leito_id"
+                                    class="form-select {% if form.leito_id.errors %}is-invalid{% endif %}">
+                                {% for val, label in form.leito_id.choices %}
+                                <option value="{{ val }}"
+                                    {% if form.leito_id.data == val %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% for e in form.leito_id.errors %}
+                            <div class="invalid-feedback">{{ e }}</div>
+                            {% endfor %}
+                        </div>
+
+                        {# Médico responsável #}
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">{{ form.medico_responsavel_id.label.text }}</label>
+                            <select name="medico_responsavel_id"
+                                    class="form-select {% if form.medico_responsavel_id.errors %}is-invalid{% endif %}">
+                                {% for val, label in form.medico_responsavel_id.choices %}
+                                <option value="{{ val }}"
+                                    {% if form.medico_responsavel_id.data == val %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% for e in form.medico_responsavel_id.errors %}
+                            <div class="invalid-feedback">{{ e }}</div>
+                            {% endfor %}
+                        </div>
+
+                        {# Tipo de internação #}
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">{{ form.tipo.label.text }}</label>
+                            <select name="tipo"
+                                    class="form-select {% if form.tipo.errors %}is-invalid{% endif %}">
+                                {% for val, label in form.tipo.choices %}
+                                <option value="{{ val }}"
+                                    {% if form.tipo.data == val %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% for e in form.tipo.errors %}
+                            <div class="invalid-feedback">{{ e }}</div>
+                            {% endfor %}
+                        </div>
+
+                        {# Convênio #}
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">{{ form.convenio.label.text }}</label>
+                            <input type="text" name="convenio"
+                                   class="form-control"
+                                   value="{{ form.convenio.data or '' }}"
+                                   placeholder="SUS, Unimed, Particular...">
+                        </div>
+
+                        {# CID-10 #}
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">{{ form.cid10_principal.label.text }}</label>
+                            <input type="text" name="cid10_principal"
+                                   class="form-control text-uppercase"
+                                   value="{{ form.cid10_principal.data or '' }}"
+                                   placeholder="Ex: J18.0" maxlength="10">
+                        </div>
+
+                        {# Motivo #}
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">{{ form.motivo.label.text }}</label>
+                            <input type="text" name="motivo"
+                                   class="form-control {% if form.motivo.errors %}is-invalid{% endif %}"
+                                   value="{{ form.motivo.data or '' }}"
+                                   placeholder="Descreva o motivo da internação" maxlength="500">
+                            {% for e in form.motivo.errors %}
+                            <div class="invalid-feedback">{{ e }}</div>
+                            {% endfor %}
+                        </div>
+
+                        {# Hipótese diagnóstica #}
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">{{ form.hipotese_diagnostica.label.text }}</label>
+                            <input type="text" name="hipotese_diagnostica"
+                                   class="form-control"
+                                   value="{{ form.hipotese_diagnostica.data or '' }}"
+                                   placeholder="Hipótese diagnóstica inicial" maxlength="500">
+                        </div>
+
+                        {# Origem do PA #}
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox"
+                                       name="origem_pa" id="origem_pa" value="1"
+                                       {% if form.origem_pa.data %}checked{% endif %}>
+                                <label class="form-check-label" for="origem_pa">
+                                    <i class="bi bi-heart-pulse me-1 text-danger"></i>
+                                    Paciente proveniente do Pronto-Atendimento
+                                </label>
+                            </div>
+                        </div>
+
+                        {# Observações #}
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">{{ form.observacoes_admissao.label.text }}</label>
+                            <textarea name="observacoes_admissao" class="form-control" rows="2"
+                                      placeholder="Informações adicionais relevantes...">{{ form.observacoes_admissao.data or '' }}</textarea>
+                        </div>
+                    </div>
+
+                    <hr class="my-3">
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-warning btn-lg text-dark fw-semibold"
+                                id="btn-admitir" {% if not paciente %}disabled{% endif %}>
+                            <i class="bi bi-check-circle me-2"></i>Confirmar admissão
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function selecionarPaciente(id, nome) {
+    document.getElementById('paciente_id_input').value = id;
+    document.getElementById('nome-paciente-display').textContent = nome;
+    document.getElementById('paciente-selecionado').classList.remove('d-none');
+    document.getElementById('btn-admitir').disabled = false;
+    document.getElementById('resultado-busca-int').innerHTML = '';
+    document.getElementById('busca-paciente').value = nome;
+}
+
+// Pré-seleciona leito se veio por parâmetro na URL
+(function() {
+    const params = new URLSearchParams(window.location.search);
+    const leitoId = params.get('leito_id');
+    if (leitoId) {
+        const sel = document.getElementById('leito_id');
+        if (sel) sel.value = leitoId;
+    }
+})();
+</script>
+{% endblock %}

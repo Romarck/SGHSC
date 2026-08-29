@@ -1,0 +1,50 @@
+{% extends "layout.html" %}
+{% block title %}Compras — Receber pedido{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-box-arrow-in-down me-2 text-success"></i>Receber pedido</h4>
+</div>
+
+<div class="card shadow-sm mb-3"><div class="card-body py-2">
+    <div class="d-flex justify-content-between align-items-center">
+        <span class="fw-semibold"><code>{{ pedido.numero }}</code></span>
+        <span class="text-muted">{{ pedido.fornecedor.razao_social }}</span>
+    </div>
+</div></div>
+
+<div class="card shadow-sm mb-3"><div class="card-body p-0">
+    <table class="table table-sm mb-0">
+        <thead class="table-light"><tr><th>Descrição</th><th class="text-center">Quantidade</th></tr></thead>
+        <tbody>
+        {% for it in pedido.itens %}
+        <tr><td>{{ it.descricao }}</td><td class="text-center">{{ it.quantidade }}</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div></div>
+
+<div class="alert alert-info py-2"><i class="bi bi-info-circle me-1"></i>Ao confirmar o recebimento, o estoque do local selecionado será atualizado automaticamente.</div>
+
+<div class="card shadow-sm"><div class="card-body">
+<form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Nota fiscal</label>
+            <input type="text" name="nota_fiscal" class="form-control">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Local de estoque</label>
+            <select name="local_id" class="form-select" required>
+                {% for l in locais %}<option value="{{ l.id }}">{{ l.nome }}</option>{% endfor %}
+            </select>
+        </div>
+    </div>
+    <div class="d-flex justify-content-end gap-2 mt-4">
+        <a href="{{ url_for('compras.pedidos') }}" class="btn btn-outline-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-success"><i class="bi bi-check-lg me-1"></i>Confirmar recebimento</button>
+    </div>
+</form>
+</div></div>
+{% endblock %}

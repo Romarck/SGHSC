@@ -1,0 +1,112 @@
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        {% if pacientes.items %}
+        <div class="table-responsive">
+            <table class="table table-hover table-hospitalar mb-0">
+                <thead>
+                    <tr>
+                        <th>Prontuário</th>
+                        <th>Nome</th>
+                        <th>Data nasc.</th>
+                        <th>Idade</th>
+                        <th>CPF</th>
+                        <th>CNS</th>
+                        <th>Telefone</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in pacientes.items %}
+                    <tr>
+                        <td class="text-muted small">
+                            {{ p.prontuario.numero if p.prontuario else '—' }}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('pacientes.detalhe', id=p.id) }}" class="fw-semibold text-decoration-none">
+                                {{ p.nome_exibicao }}
+                            </a>
+                            {% if p.alergias %}
+                            <span class="badge bg-danger ms-1" title="{{ p.alergias }}">
+                                <i class="bi bi-exclamation-triangle"></i> Alergia
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>{{ p.data_nascimento.strftime('%d/%m/%Y') if p.data_nascimento else '—' }}</td>
+                        <td>{{ p.idade }} anos</td>
+                        <td class="text-muted small">{{ p.cpf or '—' }}</td>
+                        <td class="text-muted small">{{ p.cns or '—' }}</td>
+                        <td class="text-muted small">{{ p.telefone or '—' }}</td>
+                        <td>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-light" data-bs-toggle="dropdown">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('pacientes.detalhe', id=p.id) }}">
+                                            <i class="bi bi-eye me-2"></i>Ver prontuário
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('pacientes.editar', id=p.id) }}">
+                                            <i class="bi bi-pencil me-2"></i>Editar
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('emergencia.registrar_chegada') }}?paciente_id={{ p.id }}">
+                                            <i class="bi bi-heart-pulse me-2 text-danger"></i>Registrar no PA
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('ambulatorio.agendar') }}?paciente_id={{ p.id }}">
+                                            <i class="bi bi-calendar-plus me-2 text-success"></i>Agendar consulta
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Paginação -->
+        {% if pacientes.pages > 1 %}
+        <div class="px-3 py-2 border-top d-flex justify-content-between align-items-center">
+            <small class="text-muted">{{ pacientes.total }} paciente(s)</small>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    {% if pacientes.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ pacientes.prev_num }}&q={{ busca }}">‹</a>
+                    </li>
+                    {% endif %}
+                    <li class="page-item disabled">
+                        <span class="page-link">{{ pacientes.page }}/{{ pacientes.pages }}</span>
+                    </li>
+                    {% if pacientes.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ pacientes.next_num }}&q={{ busca }}">›</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="text-center text-muted py-5">
+            <i class="bi bi-people display-4"></i>
+            <p class="mt-2">
+                {% if busca %}Nenhum resultado para "{{ busca }}".
+                {% else %}Nenhum paciente cadastrado ainda.{% endif %}
+            </p>
+            <a href="{{ url_for('pacientes.novo') }}" class="btn btn-primary">
+                <i class="bi bi-person-plus me-1"></i>Cadastrar primeiro paciente
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>

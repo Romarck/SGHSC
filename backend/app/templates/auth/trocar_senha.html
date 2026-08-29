@@ -1,0 +1,74 @@
+{% extends "layout.html" %}
+
+{% block title %}Alterar Senha{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">
+                    <i class="bi bi-key me-2"></i>
+                    {% if current_user.deve_trocar_senha %}
+                        Troca de senha obrigatória
+                    {% else %}
+                        Alterar senha
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body p-4">
+
+                {% if current_user.deve_trocar_senha %}
+                <div class="alert alert-warning small">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    Este é seu primeiro acesso. Troque sua senha antes de continuar.
+                </div>
+                {% endif %}
+
+                <form method="POST" novalidate>
+                    {{ form.hidden_tag() }}
+
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.senha_atual.label.text }}</label>
+                        <input type="password" name="senha_atual"
+                               class="form-control {% if form.senha_atual.errors %}is-invalid{% endif %}"
+                               autocomplete="current-password" />
+                        {% for error in form.senha_atual.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.nova_senha.label.text }}</label>
+                        <input type="password" name="nova_senha"
+                               class="form-control {% if form.nova_senha.errors %}is-invalid{% endif %}"
+                               autocomplete="new-password" />
+                        {% for error in form.nova_senha.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                        <div class="form-text">
+                            Mínimo 10 caracteres, combinando ao menos 3 tipos
+                            (minúsculas, maiúsculas, números, símbolos).
+                            Evite senhas comuns.
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">{{ form.confirmar_senha.label.text }}</label>
+                        <input type="password" name="confirmar_senha"
+                               class="form-control {% if form.confirmar_senha.errors %}is-invalid{% endif %}"
+                               autocomplete="new-password" />
+                        {% for error in form.confirmar_senha.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <button type="submit" class="btn btn-warning w-100 text-dark fw-bold">
+                        <i class="bi bi-check-circle me-2"></i>Alterar senha
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

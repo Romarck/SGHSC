@@ -1,0 +1,237 @@
+{% extends "layout.html" %}
+{% block title %}Controles — {{ internacao.paciente.nome_exibicao }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">
+        <i class="bi bi-activity me-2 text-primary"></i>Registrar Controles
+    </h4>
+    <a href="{{ url_for('internacao.prontuario', id=internacao.id) }}"
+       class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Voltar ao prontuário
+    </a>
+</div>
+
+{# Cabeçalho #}
+<div class="card bg-light mb-3 border-0">
+    <div class="card-body py-2 small">
+        <strong>Paciente:</strong> {{ internacao.paciente.nome_exibicao }}
+        ({{ internacao.paciente.idade }} anos) &bull;
+        <strong>Leito:</strong> {{ internacao.leito.numero }} &bull;
+        <strong>Internação:</strong> {{ internacao.numero }} &bull;
+        Dia <strong>{{ internacao.dias_internado + 1 }}º</strong>
+    </div>
+</div>
+
+<form method="POST" novalidate>
+    {{ form.hidden_tag() }}
+
+    <div class="row g-3">
+
+        {# Sinais Vitais #}
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header py-2 bg-danger text-white">
+                    <i class="bi bi-heart-pulse me-2"></i>Sinais Vitais
+                </div>
+                <div class="card-body">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">PA Sistólica (mmHg)</label>
+                            <input type="number" name="pressao_sistolica" class="form-control form-control-sm"
+                                   value="{{ form.pressao_sistolica.data or '' }}"
+                                   min="0" max="300" placeholder="120">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">PA Diastólica (mmHg)</label>
+                            <input type="number" name="pressao_diastolica" class="form-control form-control-sm"
+                                   value="{{ form.pressao_diastolica.data or '' }}"
+                                   min="0" max="200" placeholder="80">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">FC (bpm)</label>
+                            <input type="number" name="frequencia_cardiaca" class="form-control form-control-sm"
+                                   value="{{ form.frequencia_cardiaca.data or '' }}"
+                                   min="0" max="300" placeholder="70">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">FR (irpm)</label>
+                            <input type="number" name="frequencia_respiratoria" class="form-control form-control-sm"
+                                   value="{{ form.frequencia_respiratoria.data or '' }}"
+                                   min="0" max="100" placeholder="16">
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label small fw-semibold">Temp (°C)</label>
+                            <input type="number" name="temperatura" class="form-control form-control-sm"
+                                   value="{{ form.temperatura.data or '' }}"
+                                   step="0.1" min="30" max="43" placeholder="36.5">
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label small fw-semibold">SpO₂ (%)</label>
+                            <input type="number" name="saturacao_o2" class="form-control form-control-sm"
+                                   value="{{ form.saturacao_o2.data or '' }}"
+                                   min="0" max="100" placeholder="98">
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label small fw-semibold">HGT (mg/dL)</label>
+                            <input type="number" name="glicemia_capilar" class="form-control form-control-sm"
+                                   value="{{ form.glicemia_capilar.data or '' }}"
+                                   placeholder="90">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Escala de Dor (0–10)</label>
+                            <input type="number" name="escala_dor" class="form-control form-control-sm"
+                                   value="{{ form.escala_dor.data or '' }}"
+                                   min="0" max="10" placeholder="0">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Nível de consciência</label>
+                            <input type="text" name="nivel_consciencia" class="form-control form-control-sm"
+                                   value="{{ form.nivel_consciencia.data or '' }}"
+                                   placeholder="Alerta, Glasgow 15">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Balanço Hídrico #}
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header py-2 bg-info text-dark">
+                    <i class="bi bi-droplet-half me-2"></i>Balanço Hídrico
+                </div>
+                <div class="card-body">
+                    <div class="row g-2">
+
+                        <div class="col-12">
+                            <p class="text-muted small mb-1 fw-semibold">
+                                <i class="bi bi-arrow-down-circle text-primary me-1"></i>ENTRADAS (mL)
+                            </p>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small">Soroterapia EV</label>
+                            <input type="number" name="soro_ev" class="form-control form-control-sm"
+                                   value="{{ form.soro_ev.data or 0 }}" min="0" placeholder="0">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small">Medicação EV (diluída)</label>
+                            <input type="number" name="medicacao_ev" class="form-control form-control-sm"
+                                   value="{{ form.medicacao_ev.data or 0 }}" min="0" placeholder="0">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small">Ingesta oral</label>
+                            <input type="number" name="ingesta_oral" class="form-control form-control-sm"
+                                   value="{{ form.ingesta_oral.data or 0 }}" min="0" placeholder="0">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small">Outros (lavagens, etc.)</label>
+                            <input type="number" name="outros_entrada" class="form-control form-control-sm"
+                                   value="{{ form.outros_entrada.data or 0 }}" min="0" placeholder="0">
+                        </div>
+
+                        <div class="col-12 mt-2">
+                            <p class="text-muted small mb-1 fw-semibold">
+                                <i class="bi bi-arrow-up-circle text-danger me-1"></i>SAÍDAS (mL)
+                            </p>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small">Diurese</label>
+                            <input type="number" name="diurese" class="form-control form-control-sm"
+                                   value="{{ form.diurese.data or 0 }}" min="0" placeholder="0">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small">Drenos</label>
+                            <input type="number" name="drenos" class="form-control form-control-sm"
+                                   value="{{ form.drenos.data or 0 }}" min="0" placeholder="0">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small">Vômitos</label>
+                            <input type="number" name="vomitos" class="form-control form-control-sm"
+                                   value="{{ form.vomitos.data or 0 }}" min="0" placeholder="0">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small">Outros</label>
+                            <input type="number" name="outros_saida" class="form-control form-control-sm"
+                                   value="{{ form.outros_saida.data or 0 }}" min="0" placeholder="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Eliminações e Observações #}
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-md-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox"
+                                       name="evacuacao" id="evacuacao" value="1"
+                                       {% if form.evacuacao.data %}checked{% endif %}>
+                                <label class="form-check-label fw-semibold" for="evacuacao">
+                                    Evacuação
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small">Características da evacuação</label>
+                            <input type="text" name="evacuacao_caracteristicas"
+                                   class="form-control form-control-sm"
+                                   value="{{ form.evacuacao_caracteristicas.data or '' }}"
+                                   placeholder="Normal, pastosa, líquida, etc.">
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label small">Observações gerais</label>
+                            <textarea name="observacoes" class="form-control form-control-sm"
+                                      rows="2" placeholder="Intercorrências, alterações observadas...">{{ form.observacoes.data or '' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="d-flex justify-content-end gap-2 mt-3">
+        <a href="{{ url_for('internacao.prontuario', id=internacao.id) }}"
+           class="btn btn-outline-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary px-4">
+            <i class="bi bi-check-lg me-1"></i>Registrar controles
+        </button>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Cálculo do balanço em tempo real
+function calcularBalanco() {
+    const entradas = ['soro_ev','medicacao_ev','ingesta_oral','outros_entrada'];
+    const saidas = ['diurese','drenos','vomitos','outros_saida'];
+    let totalE = 0, totalS = 0;
+    entradas.forEach(n => {
+        const v = parseInt(document.querySelector(`[name="${n}"]`)?.value) || 0;
+        totalE += v;
+    });
+    saidas.forEach(n => {
+        const v = parseInt(document.querySelector(`[name="${n}"]`)?.value) || 0;
+        totalS += v;
+    });
+    const balanco = totalE - totalS;
+    const el = document.getElementById('balanco-display');
+    if (el) {
+        el.textContent = (balanco >= 0 ? '+' : '') + balanco + ' mL';
+        el.className = balanco >= 0 ? 'fw-bold text-primary' : 'fw-bold text-danger';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('input[type="number"]').forEach(function(el) {
+        el.addEventListener('input', calcularBalanco);
+    });
+    calcularBalanco();
+});
+</script>
+{% endblock %}

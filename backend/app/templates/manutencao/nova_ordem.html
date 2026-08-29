@@ -1,0 +1,55 @@
+{% extends "layout.html" %}
+{% block title %}Manutenção — Nova ordem{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-tools me-2 text-warning"></i>Nova ordem de serviço</h4>
+</div>
+
+<div class="card shadow-sm"><div class="card-body">
+<form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="row g-3">
+        <div class="col-12">
+            <label class="form-label fw-semibold">Título</label>
+            <input type="text" name="titulo" class="form-control" required>
+        </div>
+        <div class="col-12">
+            <label class="form-label fw-semibold">Descrição</label>
+            <textarea name="descricao" class="form-control" rows="3"></textarea>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label fw-semibold">Tipo</label>
+            <select name="tipo" class="form-select">
+                {% for e in tipos %}<option value="{{ e.name }}">{{ e.value }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label fw-semibold">Prioridade</label>
+            <select name="prioridade" class="form-select">
+                {% for e in prioridades %}<option value="{{ e.name }}">{{ e.value }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label fw-semibold">Local</label>
+            <input type="text" name="local" class="form-control">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Bem/equipamento</label>
+            <select name="bem_id" class="form-select">
+                <option value="">— nenhum —</option>
+                {% for b in bens %}<option value="{{ b.id }}">{{ b.descricao }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Intervalo (dias) — preventiva</label>
+            <input type="number" name="intervalo_dias" class="form-control" min="0">
+        </div>
+    </div>
+    <div class="d-flex justify-content-end gap-2 mt-4">
+        <a href="{{ url_for('manutencao.ordens') }}" class="btn btn-outline-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Salvar</button>
+    </div>
+</form>
+</div></div>
+{% endblock %}

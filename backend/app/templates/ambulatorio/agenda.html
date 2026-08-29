@@ -1,0 +1,151 @@
+{% extends "layout.html" %}
+{% block title %}Agenda Ambulatorial{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-calendar-check me-2 text-success"></i>Agenda Ambulatorial</h4>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('ambulatorio.agendar') }}" class="btn btn-success">
+            <i class="bi bi-calendar-plus me-1"></i>Agendar consulta
+        </a>
+        <a href="{{ url_for('ambulatorio.listar_agendas') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-gear me-1"></i>Configurar agendas
+        </a>
+    </div>
+</div>
+
+{# Navegação por data #}
+<div class="card shadow-sm mb-3">
+    <div class="card-body py-2 d-flex align-items-center gap-3">
+        <a href="?data={{ (data_sel - hoje.__class__.resolution).__class__(data_sel.year, data_sel.month, data_sel.day - 1 if data_sel.day > 1 else 1).isoformat() }}"
+           class="btn btn-sm btn-outline-secondary">‹ Anterior</a>
+
+        <input type="date" class="form-control form-control-sm" style="width:160px"
+               value="{{ data_sel.isoformat() }}"
+               onchange="window.location.href='?data='+this.value" />
+
+        <a href="?data={{ (data_sel.__class__(data_sel.year, data_sel.month, data_sel.day)).__class__.today().isoformat() }}"
+           class="btn btn-sm btn-outline-primary">Hoje</a>
+
+        <span class="fw-semibold">
+            {{ data_sel.strftime('%A, %d de %B de %Y') }}
+            {% if data_sel == hoje %}<span class="badge bg-primary ms-1">Hoje</span>{% endif %}
+        </span>
+    </div>
+</div>
+
+{# Resumo do dia #}
+<div class="row g-2 mb-3">
+    {% set total = consultas | length %}
+    {% set realizadas = consultas | selectattr('status.value', 'equalto', 'realizada') | list | length %}
+    {% set aguardando = consultas | selectattr('status.value', 'in', ['agendada','confirmada']) | list | length %}
+    {% set em_andamento = consultas | selectattr('status.value', 'equalto', 'em atendimento') | list | length %}
+
+    <div class="col-6 col-md-3">
+        <div class="card text-center border-secondary">
+            <div class="card-body py-2">
+                <div class="fs-4 fw-bold">{{ total }}</div>
+                <small class="text-muted">Total agendadas</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center border-warning">
+            <div class="card-body py-2">
+                <div class="fs-4 fw-bold text-warning">{{ aguardando }}</div>
+                <small class="text-muted">Aguardando</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center border-primary">
+            <div class="card-body py-2">
+                <div class="fs-4 fw-bold text-primary">{{ em_andamento }}</div>
+                <small class="text-muted">Em atendimento</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center border-success">
+            <div class="card-body py-2">
+                <div class="fs-4 fw-bold text-success">{{ realizadas }}</div>
+                <small class="text-muted">Realizadas</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Lista de consultas do dia #}
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        {% if consultas %}
+        <div class="table-responsive">
+            <table class="table table-hover table-hospitalar mb-0">
+                <thead>
+                    <tr>
+                        <th>Horário</th>
+                        <th>Paciente</th>
+                        <th>Especialidade</th>
+                        <th>Médico</th>
+                        <th>Tipo</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for c in consultas %}
+                <tr>
+                    <td class="fw-bold">{{ c.horario.strftime('%H:%M') }}</td>
+                    <td>
+                        <a href="{{ url_for('pacientes.detalhe', id=c.paciente_id) }}" class="text-decoration-none">
+                            {{ c.paciente.nome_exibicao }}
+                        </a>
+                        <br><small class="text-muted">{{ c.paciente.idade }} anos</small>
+                    </td>
+                    <td>{{ c.especialidade }}</td>
+                    <td>{{ c.medico.nome if c.medico else '—' }}</td>
+                    <td><span class="badge bg-light text-dark">{{ c.tipo.value }}</span></td>
+                    <td>
+                        <span class="badge
+                            {% if c.status.value == 'realizada' %}bg-success
+                            {% elif c.status.value == 'em atendimento' %}bg-primary
+                            {% elif c.status.value == 'falta' %}bg-danger
+                            {% elif c.status.value == 'cancelada' %}bg-secondary
+                            {% else %}bg-warning text-dark{% endif %}">
+                            {{ c.status.value }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <a href="{{ url_for('ambulatorio.consulta', id=c.id) }}"
+                               class="btn btn-sm btn-primary" title="Atender">
+                                <i class="bi bi-stethoscope"></i>
+                            </a>
+                            {% if c.status.value not in ['realizada','cancelada','falta'] %}
+                            <form method="POST" action="{{ url_for('ambulatorio.cancelar_consulta', id=c.id) }}"
+                                  onsubmit="return confirm('Cancelar consulta?')">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Cancelar">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center text-muted py-5">
+            <i class="bi bi-calendar-x display-4"></i>
+            <p class="mt-2">Nenhuma consulta agendada para este dia.</p>
+            <a href="{{ url_for('ambulatorio.agendar') }}" class="btn btn-success">
+                <i class="bi bi-calendar-plus me-1"></i>Agendar consulta
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

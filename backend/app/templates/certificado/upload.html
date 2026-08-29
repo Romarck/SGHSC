@@ -1,0 +1,65 @@
+{% extends "layout.html" %}
+{% block title %}Enviar Certificado{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="d-flex align-items-center mb-3">
+            <a href="{{ url_for('certificado.painel') }}" class="btn btn-sm btn-outline-secondary me-3">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <h4 class="mb-0"><i class="bi bi-upload me-2 text-primary"></i>Enviar Certificado A1</h4>
+        </div>
+
+        <div class="alert alert-info small">
+            <i class="bi bi-info-circle me-1"></i>
+            Envie um certificado <strong>A1</strong> no formato <code>.p12</code> ou <code>.pfx</code>,
+            emitido por uma Autoridade Certificadora credenciada pela ICP-Brasil.
+            A senha é usada apenas para validar o arquivo e não é armazenada.
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Arquivo do certificado *</label>
+                        <input type="file" name="certificado" class="form-control"
+                               accept=".p12,.pfx" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Senha do certificado *</label>
+                        <input type="password" name="senha" class="form-control" required
+                               autocomplete="off">
+                    </div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{{ url_for('certificado.painel') }}" class="btn btn-outline-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-shield-check me-1"></i>Validar e enviar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if config.DEBUG %}
+        <div class="card shadow-sm mt-3 border-warning">
+            <div class="card-body">
+                <h6 class="text-warning"><i class="bi bi-tools me-1"></i>Ambiente de desenvolvimento</h6>
+                <p class="small text-muted mb-2">
+                    Você ainda não tem um certificado ICP-Brasil? Gere um certificado
+                    autoassinado de teste para validar o fluxo de assinatura.
+                    <strong>Sem valor jurídico.</strong>
+                </p>
+                <form method="POST" action="{{ url_for('certificado.gerar_teste') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-outline-warning btn-sm">
+                        <i class="bi bi-magic me-1"></i>Gerar certificado de teste
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

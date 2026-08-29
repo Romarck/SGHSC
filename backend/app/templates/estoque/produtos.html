@@ -1,0 +1,48 @@
+{% extends "layout.html" %}
+{% block title %}Estoque — Produtos{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-box-seam me-2 text-secondary"></i>Almoxarifado — Produtos</h4>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('estoque.requisicoes') }}" class="btn btn-outline-secondary"><i class="bi bi-card-checklist me-1"></i>Requisições</a>
+        <a href="{{ url_for('estoque.locais') }}" class="btn btn-outline-secondary"><i class="bi bi-geo-alt me-1"></i>Locais</a>
+        <a href="{{ url_for('estoque.novo_produto') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Novo produto</a>
+    </div>
+</div>
+
+{% if abaixo %}
+<div class="alert alert-warning py-2"><i class="bi bi-exclamation-triangle-fill me-1"></i>
+<strong>{{ abaixo|length }}</strong> produto(s) abaixo do estoque mínimo.</div>
+{% endif %}
+
+<div class="card shadow-sm mb-3"><div class="card-body py-2">
+    <input type="search" name="q" class="form-control" placeholder="Buscar por nome ou código..."
+           value="{{ busca }}" hx-get="{{ url_for('estoque.produtos') }}"
+           hx-trigger="keyup changed delay:400ms" hx-target="body" hx-push-url="true">
+</div></div>
+
+<div class="card shadow-sm"><div class="card-body p-0">
+{% if produtos %}
+<div class="table-responsive"><table class="table table-hover mb-0">
+    <thead class="table-light"><tr><th>Código</th><th>Produto</th><th>Categoria</th>
+        <th>Unid.</th><th class="text-center">Estoque</th><th class="text-center">Mínimo</th><th></th></tr></thead>
+    <tbody>
+    {% for p in produtos %}
+    <tr class="{% if p.abaixo_minimo %}table-warning{% endif %}">
+        <td><code>{{ p.codigo }}</code></td>
+        <td class="fw-semibold">{{ p.nome }}</td>
+        <td class="small">{{ p.categoria.value }}</td>
+        <td>{{ p.unidade.value }}</td>
+        <td class="text-center fw-bold {% if p.abaixo_minimo %}text-danger{% endif %}">{{ p.estoque_total }}</td>
+        <td class="text-center text-muted">{{ p.estoque_minimo }}</td>
+        <td><a href="{{ url_for('estoque.movimentar', id=p.id) }}" class="btn btn-sm btn-outline-primary py-0"><i class="bi bi-arrow-left-right"></i></a></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table></div>
+{% else %}
+<div class="text-center text-muted py-5"><i class="bi bi-box-seam display-4"></i><p class="mt-2">Nenhum produto cadastrado.</p></div>
+{% endif %}
+</div></div>
+{% endblock %}

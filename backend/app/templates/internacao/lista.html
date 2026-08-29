@@ -1,0 +1,107 @@
+{% extends "layout.html" %}
+{% block title %}Internações Ativas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">
+        <i class="bi bi-hospital me-2 text-warning"></i>Internações Ativas
+    </h4>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('internacao.mapa_leitos') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-grid-3x3-gap me-1"></i>Mapa de leitos
+        </a>
+        <a href="{{ url_for('internacao.admitir') }}" class="btn btn-primary">
+            <i class="bi bi-person-plus me-1"></i>Admitir paciente
+        </a>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        {% if internacoes %}
+        <div class="table-responsive">
+            <table class="table table-hover table-hospitalar mb-0">
+                <thead>
+                    <tr>
+                        <th>Nº Internação</th>
+                        <th>Paciente</th>
+                        <th>Leito</th>
+                        <th>Médico responsável</th>
+                        <th>Admissão</th>
+                        <th>Dias</th>
+                        <th>Tipo</th>
+                        <th>Convênio</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for int in internacoes %}
+                <tr>
+                    <td class="fw-bold">{{ int.numero }}</td>
+                    <td>
+                        <a href="{{ url_for('pacientes.detalhe', id=int.paciente_id) }}"
+                           class="text-decoration-none fw-semibold">
+                            {{ int.paciente.nome_exibicao }}
+                        </a>
+                        <br>
+                        <small class="text-muted">{{ int.paciente.idade }} anos</small>
+                    </td>
+                    <td>
+                        <span class="badge bg-{{ int.leito.cor_status }}">
+                            {{ int.leito.numero }}
+                        </span>
+                        <br>
+                        <small class="text-muted">{{ int.leito.tipo.value }}</small>
+                        {% if int.leito.ala %}
+                        <br><small class="text-muted">{{ int.leito.ala }}</small>
+                        {% endif %}
+                    </td>
+                    <td>{{ int.medico_responsavel.nome }}</td>
+                    <td>
+                        {{ int.admissao_em.strftime('%d/%m/%Y') }}
+                        <br>
+                        <small class="text-muted">{{ int.admissao_em.strftime('%H:%M') }}</small>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge
+                            {% if int.dias_internado >= 15 %}bg-danger
+                            {% elif int.dias_internado >= 7 %}bg-warning text-dark
+                            {% else %}bg-secondary{% endif %}">
+                            {{ int.dias_internado }}d
+                        </span>
+                    </td>
+                    <td><span class="badge bg-light text-dark">{{ int.tipo.value }}</span></td>
+                    <td>{{ int.convenio or 'SUS' }}</td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <a href="{{ url_for('internacao.prontuario', id=int.id) }}"
+                               class="btn btn-sm btn-primary" title="Prontuário">
+                                <i class="bi bi-clipboard2-pulse"></i>
+                            </a>
+                            <a href="{{ url_for('internacao.transferir', id=int.id) }}"
+                               class="btn btn-sm btn-outline-warning" title="Transferir leito">
+                                <i class="bi bi-arrow-left-right"></i>
+                            </a>
+                            <a href="{{ url_for('internacao.alta', id=int.id) }}"
+                               class="btn btn-sm btn-outline-success" title="Dar alta">
+                                <i class="bi bi-box-arrow-up-right"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center text-muted py-5">
+            <i class="bi bi-hospital display-4"></i>
+            <p class="mt-3">Nenhuma internação ativa no momento.</p>
+            <a href="{{ url_for('internacao.admitir') }}" class="btn btn-primary">
+                <i class="bi bi-person-plus me-1"></i>Admitir paciente
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends "layout.html" %}
+{% block title %}Solicitar Cirurgia{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-scissors me-2 text-primary"></i>Solicitar Cirurgia</h4>
+    <a href="{{ url_for('cirurgias.escala') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Voltar
+    </a>
+</div>
+
+<form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-header py-2"><i class="bi bi-search me-2"></i>Paciente</div>
+                <div class="card-body">
+                    <input type="search" name="q" class="form-control mb-2"
+                           placeholder="Nome, CPF ou CNS..."
+                           hx-get="{{ url_for('pacientes.busca_htmx') }}"
+                           hx-trigger="keyup changed delay:400ms"
+                           hx-target="#resultado-busca-cir" autocomplete="off">
+                    <div id="resultado-busca-cir" class="border rounded"></div>
+                    <input type="hidden" name="paciente_id" id="paciente_id_input"
+                           value="{{ paciente.id if paciente else '' }}">
+                    <div id="paciente-selecionado" class="alert alert-success mt-2 py-1 small {% if not paciente %}d-none{% endif %}">
+                        <span id="nome-paciente-display">{{ paciente.nome_exibicao if paciente else '' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header py-2 bg-primary text-white"><i class="bi bi-clipboard2-pulse me-2"></i>Dados da cirurgia</div>
+                <div class="card-body">
+                    <div class="row g-2">
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Procedimento *</label>
+                            <input type="text" name="procedimento" class="form-control" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Código (SIGTAP/TUSS)</label>
+                            <input type="text" name="codigo_procedimento" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Cirurgião *</label>
+                            <select name="cirurgiao_id" class="form-select" required>
+                                <option value="">Selecione...</option>
+                                {% for m in medicos %}
+                                <option value="{{ m.id }}">{{ m.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Tipo</label>
+                            <select name="tipo" class="form-select">
+                                {% for t in tipos %}
+                                <option value="{{ t.name }}">{{ t.value | capitalize }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Porte</label>
+                            <select name="porte" class="form-select">
+                                <option value="">—</option>
+                                {% for p in portes %}
+                                <option value="{{ p.name }}">{{ p.value | capitalize }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Anestesia</label>
+                            <select name="tipo_anestesia" class="form-select">
+                                <option value="">—</option>
+                                {% for a in anestesias %}
+                                <option value="{{ a.name }}">{{ a.value | capitalize }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Lateralidade</label>
+                            <input type="text" name="lateralidade" class="form-control" placeholder="D/E/bilateral">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">CID-10</label>
+                            <input type="text" name="cid10" class="form-control text-uppercase">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Indicação</label>
+                            <textarea name="indicacao" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end mt-3">
+                        <button type="submit" class="btn btn-primary" id="btn-solicitar" {% if not paciente %}disabled{% endif %}>
+                            <i class="bi bi-check-lg me-1"></i>Solicitar cirurgia
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function selecionarPaciente(id, nome) {
+    document.getElementById('paciente_id_input').value = id;
+    document.getElementById('nome-paciente-display').textContent = nome;
+    document.getElementById('paciente-selecionado').classList.remove('d-none');
+    document.getElementById('btn-solicitar').disabled = false;
+    document.getElementById('resultado-busca-cir').innerHTML = '';
+}
+</script>
+{% endblock %}

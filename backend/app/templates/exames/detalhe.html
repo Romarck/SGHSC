@@ -1,0 +1,79 @@
+{% extends "layout.html" %}
+{% block title %}Solicitação {{ solic.numero }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-file-medical me-2 text-info"></i>Solicitação {{ solic.numero }}</h4>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('exames.listar') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Voltar
+        </a>
+        {% set assinado = solic.itens | selectattr('resultado') | map(attribute='resultado.assinado') | select | list | length > 0 %}
+        {% set tem_resultado = solic.itens | selectattr('resultado') | list | length > 0 %}
+        {% if assinado %}
+        <span class="btn btn-success btn-sm disabled">
+            <i class="bi bi-patch-check me-1"></i>Laudo assinado
+        </span>
+        {% else %}
+        <a href="{{ url_for('exames.lancar_resultado', id=solic.id) }}" class="btn btn-success btn-sm">
+            <i class="bi bi-clipboard-data me-1"></i>Lançar resultado
+        </a>
+        {% if tem_resultado %}
+        <form method="POST" action="{{ url_for('exames.assinar_laudo', id=solic.id) }}"
+              onsubmit="return confirm('Assinar digitalmente este laudo? Após assinado, não poderá ser alterado.')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-primary btn-sm"><i class="bi bi-pen me-1"></i>Assinar laudo</button>
+        </form>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<div class="card bg-light border-0 mb-3">
+    <div class="card-body py-2 small">
+        <strong>Paciente:</strong> {{ solic.paciente.nome_exibicao }} &bull;
+        <strong>Solicitante:</strong> {{ solic.solicitante.nome }} &bull;
+        <strong>Prioridade:</strong> {{ solic.prioridade.value }} &bull;
+        <strong>Status:</strong> {{ solic.status.value }} &bull;
+        {{ solic.solicitado_em.strftime('%d/%m/%Y %H:%M') }}
+        {% if solic.indicacao_clinica %}<br><strong>Indicação:</strong> {{ solic.indicacao_clinica }}{% endif %}
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header py-2"><i class="bi bi-list-check me-2"></i>Exames e Resultados</div>
+    <div class="card-body p-0">
+        <table class="table mb-0">
+            <thead class="table-light">
+                <tr><th>Exame</th><th>Resultado</th><th>Unidade</th><th>Referência</th><th>Situação</th></tr>
+            </thead>
+            <tbody>
+            {% for item in solic.itens %}
+            <tr>
+                <td class="fw-semibold">{{ item.nome_exame }}</td>
+                {% if item.resultado %}
+                <td class="{% if item.resultado.alterado %}text-danger fw-bold{% endif %}">
+                    {{ item.resultado.valor or '—' }}
+                    {% if item.resultado.laudo %}
+                    <br><small class="text-muted fw-normal">{{ item.resultado.laudo }}</small>
+                    {% endif %}
+                </td>
+                <td>{{ item.resultado.unidade or '—' }}</td>
+                <td class="small">{{ item.resultado.valor_referencia or '—' }}</td>
+                <td>
+                    {% if item.resultado.alterado %}
+                    <span class="badge bg-danger">Alterado</span>
+                    {% else %}
+                    <span class="badge bg-success">Normal</span>
+                    {% endif %}
+                </td>
+                {% else %}
+                <td colspan="4" class="text-muted"><em>Aguardando resultado</em></td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "layout.html" %}
+{% block title %}RNDS — Registro {{ reg.id }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-cloud-arrow-up me-2 text-primary"></i>Registro RNDS #{{ reg.id }}</h4>
+    <a href="{{ url_for('rnds.fila') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Voltar à fila</a>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-5">
+        <div class="card shadow-sm">
+            <div class="card-header py-2"><i class="bi bi-info-circle me-2"></i>Dados do envio</div>
+            <div class="card-body">
+                <dl class="row mb-0 small">
+                    <dt class="col-sm-5">Recurso FHIR</dt><dd class="col-sm-7">{{ reg.tipo_recurso.value }}</dd>
+                    <dt class="col-sm-5">Paciente</dt><dd class="col-sm-7">{{ reg.paciente.nome_exibicao if reg.paciente else '—' }}</dd>
+                    <dt class="col-sm-5">Status</dt><dd class="col-sm-7"><span class="badge bg-{{ reg.cor_status }}">{{ reg.status.value }}</span></dd>
+                    <dt class="col-sm-5">Tentativas</dt><dd class="col-sm-7">{{ reg.tentativas }}</dd>
+                    <dt class="col-sm-5">Protocolo</dt><dd class="col-sm-7">{{ reg.protocolo_rnds or '—' }}</dd>
+                    <dt class="col-sm-5">Criado em</dt><dd class="col-sm-7">{{ reg.criado_em.strftime('%d/%m/%Y %H:%M') }}</dd>
+                    <dt class="col-sm-5">Enviado em</dt><dd class="col-sm-7">{{ reg.enviado_em.strftime('%d/%m/%Y %H:%M') if reg.enviado_em else '—' }}</dd>
+                </dl>
+                {% if reg.mensagem_retorno %}
+                <hr><div class="small text-muted"><strong>Retorno:</strong> {{ reg.mensagem_retorno }}</div>
+                {% endif %}
+                {% if reg.status.name in ['PENDENTE', 'ERRO'] %}
+                <hr>
+                <form method="POST" action="{{ url_for('rnds.enviar', id=reg.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-primary w-100"><i class="bi bi-send me-1"></i>Enviar à RNDS</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-7">
+        <div class="card shadow-sm">
+            <div class="card-header py-2"><i class="bi bi-filetype-json me-2"></i>Payload FHIR</div>
+            <div class="card-body p-0">
+                <pre class="mb-0 p-3" style="font-size:.8rem; max-height:500px; overflow:auto">{{ reg.payload_fhir or 'Sem payload gerado.' }}</pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

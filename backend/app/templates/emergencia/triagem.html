@@ -1,0 +1,176 @@
+{% extends "layout.html" %}
+{% block title %}Triagem Manchester{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-clipboard-pulse me-2 text-warning"></i>Triagem Manchester</h4>
+    <a href="{{ url_for('emergencia.fila') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Voltar à fila
+    </a>
+</div>
+
+{# Dados do paciente #}
+<div class="alert alert-info py-2 mb-3">
+    <strong>Paciente:</strong> {{ atendimento.paciente.nome_exibicao }} &nbsp;|&nbsp;
+    <strong>Idade:</strong> {{ atendimento.paciente.idade }} anos &nbsp;|&nbsp;
+    <strong>Chegada:</strong> {{ atendimento.chegada_em.strftime('%H:%M') }} &nbsp;|&nbsp;
+    <strong>Atendimento:</strong> {{ atendimento.numero }}
+    {% if atendimento.paciente.alergias %}
+    <br><span class="text-danger fw-bold">
+        <i class="bi bi-exclamation-triangle me-1"></i>ALERGIA: {{ atendimento.paciente.alergias }}
+    </span>
+    {% endif %}
+</div>
+
+<form method="POST" novalidate>
+    {{ form.hidden_tag() }}
+    <div class="row g-3">
+
+        {# Classificação e queixa #}
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header py-2 fw-semibold">
+                    <i class="bi bi-palette me-2"></i>Classificação de Risco
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {# Seletor visual de cor #}
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Cor Manchester *</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                {% for val, label in form.classificacao.choices if val %}
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio"
+                                           name="classificacao" id="cor_{{ val }}" value="{{ val }}"
+                                           {% if form.classificacao.data == val %}checked{% endif %}
+                                           onchange="atualizarCorBorda(this.value)" />
+                                    <label class="form-check-label btn btn-sm
+                                        {% if val == 'VERMELHO' %}btn-danger
+                                        {% elif val == 'LARANJA' %}btn-warning
+                                        {% elif val == 'AMARELO' %}btn-warning text-dark
+                                        {% elif val == 'VERDE' %}btn-success
+                                        {% elif val == 'AZUL' %}btn-info text-dark
+                                        {% endif %}"
+                                        for="cor_{{ val }}">
+                                        {{ label }}
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% for e in form.classificacao.errors %}
+                            <div class="text-danger small">{{ e }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.queixa_principal.label.text }} *</label>
+                            <input type="text" name="queixa_principal" class="form-control
+                                {% if form.queixa_principal.errors %}is-invalid{% endif %}"
+                                value="{{ form.queixa_principal.data or '' }}"
+                                placeholder="Descreva a queixa principal do paciente" />
+                            {% for e in form.queixa_principal.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.discriminador.label.text }}</label>
+                            <input type="text" name="discriminador" class="form-control"
+                                value="{{ form.discriminador.data or '' }}"
+                                placeholder="Ex: Dor torácica moderada" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Sinais vitais #}
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header py-2 fw-semibold">
+                    <i class="bi bi-activity me-2"></i>Sinais Vitais
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-6 col-md-2">
+                            <label class="form-label">PAS (mmHg)</label>
+                            <input type="number" name="pressao_sistolica" class="form-control"
+                                value="{{ form.pressao_sistolica.data or '' }}" min="0" max="300" />
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <label class="form-label">PAD (mmHg)</label>
+                            <input type="number" name="pressao_diastolica" class="form-control"
+                                value="{{ form.pressao_diastolica.data or '' }}" min="0" max="200" />
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <label class="form-label">FC (bpm)</label>
+                            <input type="number" name="frequencia_cardiaca" class="form-control"
+                                value="{{ form.frequencia_cardiaca.data or '' }}" min="0" max="300" />
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <label class="form-label">FR (irpm)</label>
+                            <input type="number" name="frequencia_respiratoria" class="form-control"
+                                value="{{ form.frequencia_respiratoria.data or '' }}" min="0" max="100" />
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <label class="form-label">Temp (°C)</label>
+                            <input type="number" name="temperatura" class="form-control"
+                                value="{{ form.temperatura.data or '' }}" step="0.1" min="30" max="45" />
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <label class="form-label">SpO₂ (%)</label>
+                            <input type="number" name="saturacao_o2" class="form-control"
+                                value="{{ form.saturacao_o2.data or '' }}" min="0" max="100" />
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <label class="form-label">Glicemia (mg/dL)</label>
+                            <input type="number" name="glicemia_capilar" class="form-control"
+                                value="{{ form.glicemia_capilar.data or '' }}" />
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <label class="form-label">Peso (kg)</label>
+                            <input type="number" name="peso" class="form-control"
+                                value="{{ form.peso.data or '' }}" step="0.1" />
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <label class="form-label">Altura (m)</label>
+                            <input type="number" name="altura" class="form-control"
+                                value="{{ form.altura.data or '' }}" step="0.01" />
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <label class="form-label">Dor (0–10)</label>
+                            <input type="number" name="escala_dor" class="form-control"
+                                value="{{ form.escala_dor.data or '' }}" min="0" max="10" />
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label">Observações</label>
+                            <textarea name="observacoes" class="form-control" rows="2">{{ form.observacoes.data or '' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 d-flex gap-2 justify-content-end">
+            <a href="{{ url_for('emergencia.fila') }}" class="btn btn-outline-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-warning text-dark fw-bold">
+                <i class="bi bi-check-lg me-1"></i>Confirmar triagem
+            </button>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function atualizarCorBorda(valor) {
+    const cores = {
+        'VERMELHO': 'border-danger',
+        'LARANJA':  'border-warning',
+        'AMARELO':  'border-warning',
+        'VERDE':    'border-success',
+        'AZUL':     'border-info',
+    };
+    const card = document.querySelector('.card.shadow-sm');
+    Object.values(cores).forEach(c => card.classList.remove(c));
+    if (cores[valor]) card.classList.add(cores[valor]);
+}
+</script>
+{% endblock %}

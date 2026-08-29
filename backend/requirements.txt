@@ -1,0 +1,61 @@
+# Web Framework
+Flask==3.1.3          # CVE-2025-47278 (chave fallback sessão) / CVE-2026-27205 (Vary: Cookie)
+Werkzeug==3.1.8       # CVE-2025-66221 (path traversal em safe_join)
+
+# ORM e migrações
+Flask-SQLAlchemy==3.1.1
+SQLAlchemy==2.0.41
+Flask-Migrate==4.1.0
+alembic==1.16.1
+psycopg2-binary==2.9.10
+
+# Autenticação e sessão
+Flask-Login==0.6.3
+Flask-WTF==1.2.2
+WTForms==3.2.2
+email-validator==2.2.0
+
+# Segurança
+Flask-Bcrypt==1.0.1
+itsdangerous==2.2.0
+Flask-Limiter==4.1.1     # rate limiting (S-09)
+
+# Formulários e validação
+marshmallow==3.26.2      # PYSEC-2026-1605 (patch; mantém série 3.x)
+Flask-Marshmallow==1.2.1
+marshmallow-sqlalchemy==1.4.2
+
+# Certificado digital ICP-Brasil
+# pyHanko: assinatura PDF/PAdES compatível com ICP-Brasil, sem compilação Cython
+# Integração com token A3 via driver PKCS#11 do fabricante (SafeSign, ePKCS11)
+cryptography==50.0.1     # CVE-2026-39892 (buffer overflow em buffers não contíguos)
+pyOpenSSL==26.4.0        # requer cryptography <51,>=49
+pyhanko==0.36.2          # requer cryptography <51,>=49
+pyhanko-certvalidator==0.31.4
+
+# Utilitários
+python-dotenv==1.2.2     # PYSEC-2026-2270
+Flask-CORS==6.0.0        # PYSEC-2026-1383/1384/1385
+Pillow==12.3.0           # Geração de imagens/relatórios (série 12.x — CVE-2025-48379 et al.)
+reportlab==4.2.5         # Geração de PDFs
+qrcode==8.0              # QR Code para validação de documentos
+
+# Data e tempo
+python-dateutil==2.9.0.post0
+pytz==2025.1
+
+# Testes
+pytest==9.0.3            # PYSEC-2026-1845
+pytest-flask==1.3.0
+pytest-cov==6.1.0
+factory-boy==3.3.3
+
+# Servidor WSGI (produção)
+gunicorn==23.0.0
+
+# Dev / Debug
+Flask-DebugToolbar==0.16.0
+
+# Lint / CI
+ruff==0.16.5
+pip-audit==2.10.1

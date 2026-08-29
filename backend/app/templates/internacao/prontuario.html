@@ -1,0 +1,509 @@
+{% extends "layout.html" %}
+{% block title %}Prontuário — {{ internacao.paciente.nome_exibicao }}{% endblock %}
+
+{% block content %}
+
+{# Cabeçalho do prontuário #}
+<div class="card shadow-sm mb-3 border-warning">
+    <div class="card-body py-2">
+        <div class="row align-items-center g-2">
+            <div class="col-md-5">
+                <div class="d-flex align-items-center gap-3">
+                    <a href="{{ url_for('internacao.listar') }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i>
+                    </a>
+                    <div>
+                        <h5 class="mb-0 fw-bold">{{ internacao.paciente.nome_exibicao }}</h5>
+                        <small class="text-muted">
+                            {{ internacao.paciente.idade }} anos &bull;
+                            {{ internacao.paciente.sexo.value if internacao.paciente.sexo else '' }}
+                            {% if internacao.paciente.prontuario %}
+                            &bull; Prontuário {{ internacao.paciente.prontuario.numero }}
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-7">
+                <div class="d-flex flex-wrap gap-2 justify-content-md-end align-items-center">
+                    <span class="badge bg-warning text-dark fs-6 px-3">
+                        <i class="bi bi-hospital me-1"></i>{{ internacao.numero }}
+                    </span>
+                    <span class="badge bg-{{ internacao.leito.cor_status }} fs-6 px-3">
+                        <i class="bi bi-grid-3x3-gap me-1"></i>Leito {{ internacao.leito.numero }}
+                    </span>
+                    <span class="badge bg-secondary px-3">
+                        {{ internacao.dias_internado }}d internado
+                    </span>
+                    <span class="badge bg-light text-dark px-3">
+                        {{ internacao.convenio or 'SUS' }}
+                    </span>
+                    {% if internacao.status.value == 'ativa' %}
+                    <span class="badge bg-success px-3">Ativa</span>
+                    {% else %}
+                    <span class="badge bg-dark px-3">{{ internacao.status.value | capitalize }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {# Linha de detalhes #}
+        <div class="row mt-2 g-1 small text-muted">
+            <div class="col-sm-4">
+                <i class="bi bi-person-badge me-1"></i>
+                <strong>Médico:</strong> {{ internacao.medico_responsavel.nome }}
+            </div>
+            <div class="col-sm-4">
+                <i class="bi bi-calendar-event me-1"></i>
+                <strong>Admissão:</strong> {{ internacao.admissao_em.strftime('%d/%m/%Y %H:%M') }}
+            </div>
+            <div class="col-sm-4">
+                <i class="bi bi-clipboard2 me-1"></i>
+                <strong>Motivo:</strong> {{ internacao.motivo[:60] }}{% if internacao.motivo|length > 60 %}...{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Alertas do paciente #}
+{% if internacao.paciente.alergias %}
+<div class="alert alert-danger py-2 mb-3">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    <strong>Alergias:</strong> {{ internacao.paciente.alergias }}
+</div>
+{% endif %}
+
+{# Abas do prontuário #}
+<ul class="nav nav-tabs mb-3" id="abasProntuario" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="tab-prescricao" data-bs-toggle="tab"
+                data-bs-target="#pane-prescricao" type="button">
+            <i class="bi bi-capsule me-1"></i>Prescrição
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-evolucao" data-bs-toggle="tab"
+                data-bs-target="#pane-evolucao" type="button">
+            <i class="bi bi-journal-text me-1"></i>Evolução
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-controles" data-bs-toggle="tab"
+                data-bs-target="#pane-controles" type="button">
+            <i class="bi bi-activity me-1"></i>Controles
+            {% if controles_hoje %}
+            <span class="badge bg-primary ms-1">{{ controles_hoje | length }}</span>
+            {% endif %}
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-enfermagem" data-bs-toggle="tab"
+                data-bs-target="#pane-enfermagem" type="button">
+            <i class="bi bi-clipboard2-heart me-1"></i>Enfermagem
+        </button>
+    </li>
+    <li class="nav-item ms-auto" role="presentation">
+        {% if internacao.status.value == 'ativa' %}
+        <a href="{{ url_for('internacao.alta', id=internacao.id) }}"
+           class="btn btn-sm btn-outline-success ms-2">
+            <i class="bi bi-box-arrow-up-right me-1"></i>Dar alta
+        </a>
+        <a href="{{ url_for('internacao.transferir', id=internacao.id) }}"
+           class="btn btn-sm btn-outline-warning ms-1">
+            <i class="bi bi-arrow-left-right me-1"></i>Transferir
+        </a>
+        {% endif %}
+    </li>
+</ul>
+
+<div class="tab-content" id="abasProntuarioContent">
+
+    {# ===== ABA PRESCRIÇÃO ===== #}
+    <div class="tab-pane fade show active" id="pane-prescricao" role="tabpanel">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0 text-muted">Prescrição Médica</h6>
+            {% if internacao.status.value == 'ativa' %}
+            <a href="{{ url_for('internacao.nova_prescricao', id=internacao.id) }}"
+               class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>Nova prescrição
+            </a>
+            {% endif %}
+        </div>
+
+        {% if prescricao_ativa %}
+        <div class="card border-primary shadow-sm">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-2">
+                <span>
+                    <i class="bi bi-capsule me-2"></i>
+                    Prescrição {{ prescricao_ativa.numero }} —
+                    {{ prescricao_ativa.data_prescricao.strftime('%d/%m/%Y') }}
+                </span>
+                <div class="d-flex align-items-center gap-2">
+                    {% if prescricao_ativa.assinada %}
+                    <a href="{{ url_for('certificado.validar', codigo='') }}"
+                       class="badge bg-success text-decoration-none" title="Assinada digitalmente">
+                        <i class="bi bi-patch-check me-1"></i>Assinada
+                    </a>
+                    {% else %}
+                    <span class="badge bg-warning text-dark"><i class="bi bi-pen me-1"></i>Pendente assinatura</span>
+                    <form method="POST" action="{{ url_for('internacao.assinar_prescricao', pid=prescricao_ativa.id) }}"
+                          onsubmit="return confirm('Assinar digitalmente esta prescrição? Após assinada, ela não poderá ser alterada.')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-sm btn-light py-0" title="Assinar digitalmente">
+                            <i class="bi bi-pen me-1"></i>Assinar
+                        </button>
+                    </form>
+                    {% endif %}
+                    <small>Dr(a). {{ prescricao_ativa.medico.nome }}</small>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width:3%">#</th>
+                                <th style="width:12%">Tipo</th>
+                                <th>Medicamento / Item</th>
+                                <th style="width:10%">Dose</th>
+                                <th style="width:8%">Via</th>
+                                <th style="width:12%">Frequência</th>
+                                <th style="width:15%">Horários</th>
+                                <th style="width:10%">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for item in prescricao_ativa.itens %}
+                        <tr class="{% if item.status.value != 'ativo' %}text-muted text-decoration-line-through{% endif %}">
+                            <td class="text-muted small">{{ loop.index }}</td>
+                            <td>
+                                <span class="badge
+                                    {% if item.tipo.value == 'medicamento' %}bg-primary
+                                    {% elif item.tipo.value == 'solução' %}bg-info text-dark
+                                    {% elif item.tipo.value == 'dieta' %}bg-success
+                                    {% elif item.tipo.value == 'cuidado' %}bg-warning text-dark
+                                    {% else %}bg-secondary{% endif %}"
+                                    style="font-size:.7rem">
+                                    {{ item.tipo.value }}
+                                </span>
+                            </td>
+                            <td class="fw-semibold">
+                                {{ item.descricao }}
+                                {% if item.diluicao %}
+                                <br><small class="text-muted fw-normal">{{ item.diluicao }}</small>
+                                {% endif %}
+                                {% if item.observacoes %}
+                                <br><small class="text-info fw-normal">{{ item.observacoes }}</small>
+                                {% endif %}
+                            </td>
+                            <td>{{ item.dose or '—' }}</td>
+                            <td>{{ item.via.value if item.via else '—' }}</td>
+                            <td>{{ item.frequencia.value if item.frequencia else item.frequencia_custom or '—' }}</td>
+                            <td class="small">{{ item.horarios or '—' }}</td>
+                            <td>
+                                <span class="badge
+                                    {% if item.status.value == 'ativo' %}bg-success
+                                    {% elif item.status.value == 'suspenso' %}bg-danger
+                                    {% else %}bg-secondary{% endif %}"
+                                    style="font-size:.7rem">
+                                    {{ item.status.value }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-3">
+                                Nenhum item na prescrição.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if prescricao_ativa.observacoes %}
+                <div class="card-footer bg-light small text-muted">
+                    <i class="bi bi-info-circle me-1"></i>
+                    <strong>Obs:</strong> {{ prescricao_ativa.observacoes }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center text-muted py-4">
+            <i class="bi bi-capsule display-4"></i>
+            <p class="mt-2">Nenhuma prescrição ativa.</p>
+            {% if internacao.status.value == 'ativa' %}
+            <a href="{{ url_for('internacao.nova_prescricao', id=internacao.id) }}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>Criar primeira prescrição
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {# Prescrição de enfermagem #}
+        <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
+            <h6 class="text-muted mb-0">Prescrição de Enfermagem</h6>
+            {% if internacao.status.value == 'ativa' %}
+            <a href="{{ url_for('internacao.prescricao_enfermagem', id=internacao.id) }}"
+               class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>Nova prescrição enfermagem
+            </a>
+            {% endif %}
+        </div>
+        {% set pef = internacao.prescricoes_enfermagem.filter_by(ativa=True).first() %}
+        {% if pef %}
+        <div class="card border-secondary shadow-sm">
+            <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center py-2">
+                <span><i class="bi bi-clipboard2-heart me-2"></i>
+                    {{ pef.data_prescricao.strftime('%d/%m/%Y') }}
+                </span>
+                <div class="d-flex align-items-center gap-2">
+                    {% if pef.assinada %}
+                    <span class="badge bg-success" style="font-size:.65rem"><i class="bi bi-patch-check"></i> Assinada</span>
+                    {% elif internacao.status.value == 'ativa' %}
+                    <form method="POST" action="{{ url_for('internacao.assinar_prescricao_enfermagem', pid=pef.id) }}"
+                          onsubmit="return confirm('Assinar digitalmente esta prescrição de enfermagem?')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-sm btn-light py-0" style="font-size:.7rem"><i class="bi bi-pen"></i> Assinar</button>
+                    </form>
+                    {% endif %}
+                    <small>{{ pef.enfermeiro.nome }}</small>
+                </div>
+            </div>
+            <div class="card-body">
+                <pre class="mb-0" style="white-space:pre-wrap; font-family:inherit; font-size:.9rem">{{ pef.conteudo }}</pre>
+            </div>
+        </div>
+        {% else %}
+        <p class="text-muted small">Nenhuma prescrição de enfermagem ativa.</p>
+        {% endif %}
+    </div>
+
+    {# ===== ABA EVOLUÇÃO ===== #}
+    <div class="tab-pane fade" id="pane-evolucao" role="tabpanel">
+        <div class="row g-3">
+            {# Evoluções médicas #}
+            <div class="col-md-6">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="text-muted mb-0"><i class="bi bi-stethoscope me-1"></i>Evoluções Médicas</h6>
+                    {% if internacao.status.value == 'ativa' %}
+                    <a href="{{ url_for('internacao.evolucao_medica', id=internacao.id) }}"
+                       class="btn btn-primary btn-sm">
+                        <i class="bi bi-plus-lg me-1"></i>Nova evolução
+                    </a>
+                    {% endif %}
+                </div>
+                {% for ev in evolucoes_medicas %}
+                <div class="card shadow-sm mb-2">
+                    <div class="card-header py-1 bg-light d-flex justify-content-between align-items-center small">
+                        <span class="fw-semibold">{{ ev.registrado_em.strftime('%d/%m/%Y %H:%M') }}</span>
+                        <span class="text-muted">Dr(a). {{ ev.medico.nome.split()[0] }}</span>
+                        {% if ev.assinada %}
+                        <span class="badge bg-success" style="font-size:.65rem">
+                            <i class="bi bi-patch-check"></i> Assinada
+                        </span>
+                        {% elif internacao.status.value == 'ativa' %}
+                        <form method="POST" action="{{ url_for('internacao.assinar_evolucao_medica', eid=ev.id) }}"
+                              onsubmit="return confirm('Assinar digitalmente esta evolução? Após assinada, não poderá ser alterada.')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button class="btn btn-outline-primary py-0" style="font-size:.65rem" title="Assinar">
+                                <i class="bi bi-pen"></i> Assinar
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                    <div class="card-body py-2 small">
+                        {% if ev.subjetivo %}
+                        <p class="mb-1"><strong>S:</strong> {{ ev.subjetivo }}</p>
+                        {% endif %}
+                        {% if ev.objetivo %}
+                        <p class="mb-1"><strong>O:</strong> {{ ev.objetivo }}</p>
+                        {% endif %}
+                        {% if ev.avaliacao %}
+                        <p class="mb-1"><strong>A:</strong> {{ ev.avaliacao }}</p>
+                        {% endif %}
+                        {% if ev.plano %}
+                        <p class="mb-1"><strong>P:</strong> {{ ev.plano }}</p>
+                        {% endif %}
+                        {% if ev.evolucao_livre %}
+                        <p class="mb-0">{{ ev.evolucao_livre }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-muted small">Nenhuma evolução médica registrada.</p>
+                {% endfor %}
+            </div>
+
+            {# Evoluções de enfermagem #}
+            <div class="col-md-6">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="text-muted mb-0"><i class="bi bi-clipboard2-heart me-1"></i>Evoluções de Enfermagem</h6>
+                    {% if internacao.status.value == 'ativa' %}
+                    <a href="{{ url_for('internacao.evolucao_enfermagem', id=internacao.id) }}"
+                       class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-plus-lg me-1"></i>Nova evolução
+                    </a>
+                    {% endif %}
+                </div>
+                {% for ev in evolucoes_enfermagem %}
+                <div class="card shadow-sm mb-2">
+                    <div class="card-header py-1 bg-light d-flex justify-content-between small">
+                        <span class="fw-semibold">{{ ev.registrado_em.strftime('%d/%m/%Y %H:%M') }}</span>
+                        <span class="badge bg-light text-dark border" style="font-size:.65rem">
+                            {% if ev.turno == 'manha' %}Manhã
+                            {% elif ev.turno == 'tarde' %}Tarde
+                            {% else %}Noite{% endif %}
+                        </span>
+                        <span class="text-muted">{{ ev.profissional.nome.split()[0] }}</span>
+                    </div>
+                    <div class="card-body py-2 small">
+                        <p class="mb-0">{{ ev.conteudo }}</p>
+                        {% if ev.observacoes %}
+                        <p class="mb-0 text-muted mt-1"><em>{{ ev.observacoes }}</em></p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-muted small">Nenhuma evolução de enfermagem registrada.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    {# ===== ABA CONTROLES ===== #}
+    <div class="tab-pane fade" id="pane-controles" role="tabpanel">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h6 class="mb-0 text-muted">Controles do dia — {{ hoje.strftime('%d/%m/%Y') }}</h6>
+                {% if controles_hoje %}
+                <small class="text-muted">
+                    Balanço hídrico acumulado:
+                    <span class="fw-bold
+                        {% if balanco_dia >= 0 %}text-primary{% else %}text-danger{% endif %}">
+                        {{ '%+d' % balanco_dia }} mL
+                    </span>
+                </small>
+                {% endif %}
+            </div>
+            {% if internacao.status.value == 'ativa' %}
+            <a href="{{ url_for('internacao.controles', id=internacao.id) }}"
+               class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>Registrar controles
+            </a>
+            {% endif %}
+        </div>
+
+        {% if controles_hoje %}
+        <div class="table-responsive">
+            <table class="table table-sm table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Horário</th>
+                        <th>PA</th>
+                        <th>FC</th>
+                        <th>FR</th>
+                        <th>Temp</th>
+                        <th>SpO₂</th>
+                        <th>HGT</th>
+                        <th>Dor</th>
+                        <th>Entradas</th>
+                        <th>Saídas</th>
+                        <th>Balanço</th>
+                        <th>Registrado por</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for c in controles_hoje %}
+                <tr>
+                    <td>{{ c.registrado_em.strftime('%H:%M') }}</td>
+                    <td>{{ c.pressao_arterial }}</td>
+                    <td>{{ c.frequencia_cardiaca or '—' }}</td>
+                    <td>{{ c.frequencia_respiratoria or '—' }}</td>
+                    <td>{{ c.temperatura or '—' }}</td>
+                    <td>{{ (c.saturacao_o2|string + '%') if c.saturacao_o2 else '—' }}</td>
+                    <td>{{ c.glicemia_capilar or '—' }}</td>
+                    <td>
+                        {% if c.escala_dor is not none %}
+                        <span class="badge
+                            {% if c.escala_dor >= 7 %}bg-danger
+                            {% elif c.escala_dor >= 4 %}bg-warning text-dark
+                            {% else %}bg-success{% endif %}">
+                            {{ c.escala_dor }}/10
+                        </span>
+                        {% else %}—{% endif %}
+                    </td>
+                    <td class="text-primary">+{{ c.total_entradas }} mL</td>
+                    <td class="text-danger">-{{ c.total_saidas }} mL</td>
+                    <td class="fw-semibold
+                        {% if c.balanco_hidrico >= 0 %}text-primary{% else %}text-danger{% endif %}">
+                        {{ '%+d' % c.balanco_hidrico }} mL
+                    </td>
+                    <td class="small text-muted">{{ c.registrado_por.nome.split()[0] }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center text-muted py-4">
+            <i class="bi bi-activity display-4"></i>
+            <p class="mt-2">Nenhum controle registrado hoje.</p>
+            {% if internacao.status.value == 'ativa' %}
+            <a href="{{ url_for('internacao.controles', id=internacao.id) }}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>Registrar primeiro controle
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    {# ===== ABA ENFERMAGEM (histórico completo) ===== #}
+    <div class="tab-pane fade" id="pane-enfermagem" role="tabpanel">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="text-muted mb-0">Histórico de Enfermagem</h6>
+            {% if internacao.status.value == 'ativa' %}
+            <div class="d-flex gap-1">
+                <a href="{{ url_for('internacao.prescricao_enfermagem', id=internacao.id) }}"
+                   class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-clipboard2 me-1"></i>Prescrição enf.
+                </a>
+                <a href="{{ url_for('internacao.evolucao_enfermagem', id=internacao.id) }}"
+                   class="btn btn-secondary btn-sm">
+                    <i class="bi bi-plus-lg me-1"></i>Nova evolução
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        {% set todas_evolucoes = internacao.evolucoes_enfermagem.all() %}
+        {% for ev in todas_evolucoes %}
+        <div class="card shadow-sm mb-2">
+            <div class="card-header py-1 bg-light d-flex justify-content-between align-items-center small">
+                <span class="fw-semibold">{{ ev.registrado_em.strftime('%d/%m/%Y %H:%M') }}</span>
+                {% if ev.assinada %}
+                <span class="badge bg-success" style="font-size:.65rem"><i class="bi bi-patch-check"></i> Assinada</span>
+                {% elif internacao.status.value == 'ativa' %}
+                <form method="POST" action="{{ url_for('internacao.assinar_evolucao_enfermagem', eid=ev.id) }}"
+                      onsubmit="return confirm('Assinar digitalmente esta evolução de enfermagem?')">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-outline-secondary py-0" style="font-size:.65rem"><i class="bi bi-pen"></i> Assinar</button>
+                </form>
+                {% endif %}
+                <span class="badge bg-secondary" style="font-size:.65rem">
+                    {% if ev.turno == 'manha' %}Manhã
+                    {% elif ev.turno == 'tarde' %}Tarde
+                    {% else %}Noite{% endif %}
+                </span>
+                <span class="text-muted">{{ ev.profissional.nome }}</span>
+            </div>
+            <div class="card-body py-2 small">
+                <p class="mb-0">{{ ev.conteudo }}</p>
+            </div>
+        </div>
+        {% else %}
+        <p class="text-muted small">Nenhuma evolução de enfermagem registrada.</p>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

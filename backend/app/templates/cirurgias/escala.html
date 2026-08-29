@@ -1,0 +1,58 @@
+{% extends "layout.html" %}
+{% block title %}Escala Cirúrgica{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-scissors me-2 text-primary"></i>Escala Cirúrgica</h4>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('cirurgias.mapa') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-grid-3x3-gap me-1"></i>Mapa do dia
+        </a>
+        <a href="{{ url_for('cirurgias.salas') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-door-open me-1"></i>Salas
+        </a>
+        <a href="{{ url_for('cirurgias.solicitar') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Solicitar cirurgia
+        </a>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        {% if cirurgias %}
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr><th>Nº</th><th>Paciente</th><th>Procedimento</th><th>Cirurgião</th>
+                    <th>Data agendada</th><th>Sala</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+            {% for c in cirurgias %}
+            <tr>
+                <td class="fw-bold small">{{ c.numero }}</td>
+                <td>{{ c.paciente.nome_exibicao }}</td>
+                <td class="small">{{ c.procedimento }}
+                    {% if c.tipo.value != 'eletiva' %}
+                    <span class="badge bg-danger ms-1">{{ c.tipo.value }}</span>
+                    {% endif %}
+                </td>
+                <td class="small">{{ c.cirurgiao.nome.split()[0] }}</td>
+                <td class="small">{{ c.data_agendada.strftime('%d/%m %H:%M') if c.data_agendada else '—' }}</td>
+                <td class="small">{{ c.sala.nome if c.sala else '—' }}</td>
+                <td><span class="badge bg-{{ c.cor_status }}">{{ c.status.value }}</span></td>
+                <td>
+                    <a href="{{ url_for('cirurgias.detalhe', id=c.id) }}"
+                       class="btn btn-sm btn-outline-primary py-0"><i class="bi bi-eye"></i></a>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="text-center text-muted py-5">
+            <i class="bi bi-scissors display-4"></i>
+            <p class="mt-2">Nenhuma cirurgia na escala.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

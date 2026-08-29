@@ -1,0 +1,53 @@
+{% extends "layout.html" %}
+{% block title %}Mapa de Dietas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-egg-fried me-2 text-success"></i>Mapa de Dietas</h4>
+</div>
+
+{% if alas %}
+    {% for ala, linhas in alas.items() %}
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-white py-2 fw-semibold">
+            <i class="bi bi-building me-2 text-primary"></i>{{ ala }}
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-sm table-hover mb-0">
+                <thead class="table-light">
+                    <tr><th>Leito</th><th>Paciente</th><th>Dieta</th><th>Via</th>
+                        <th>Fracionamento</th><th>Restrições</th><th></th></tr>
+                </thead>
+                <tbody>
+                {% for internacao, dieta in linhas %}
+                <tr>
+                    <td><span class="badge bg-secondary">{{ internacao.leito.numero }}</span></td>
+                    <td>{{ internacao.paciente.nome_exibicao }}</td>
+                    {% if dieta %}
+                    <td><span class="badge bg-success">{{ dieta.tipo_dieta.value }}</span></td>
+                    <td class="small">{{ dieta.via.value }}</td>
+                    <td class="small">{{ dieta.fracionamento or '—' }}</td>
+                    <td class="small">{{ dieta.restricoes or '—' }}</td>
+                    {% else %}
+                    <td colspan="4" class="text-muted"><em>Sem prescrição dietética</em></td>
+                    {% endif %}
+                    <td>
+                        <a href="{{ url_for('nutricao.prescrever', internacao_id=internacao.id) }}"
+                           class="btn btn-sm btn-outline-success py-0" title="Prescrever dieta">
+                            <i class="bi bi-pencil-square"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+<div class="text-center text-muted py-5">
+    <i class="bi bi-egg-fried display-4"></i>
+    <p class="mt-2">Nenhuma internação ativa.</p>
+</div>
+{% endif %}
+{% endblock %}

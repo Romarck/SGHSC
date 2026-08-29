@@ -1,0 +1,67 @@
+{% extends "layout.html" %}
+{% block title %}Fila de Coleta{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-list-ol me-2 text-info"></i>Fila de Coleta / Laboratório</h4>
+    <a href="{{ url_for('exames.listar') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Todos os exames
+    </a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        {% if pendentes %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr><th>Nº</th><th>Paciente</th><th>Prioridade</th><th>Exames</th>
+                        <th>Status</th><th>Solicitado</th><th>Ações</th></tr>
+                </thead>
+                <tbody>
+                {% for s in pendentes %}
+                <tr class="{% if s.prioridade.value == 'emergência' %}table-danger{% elif s.prioridade.value == 'urgente' %}table-warning{% endif %}">
+                    <td class="fw-bold">{{ s.numero }}</td>
+                    <td>{{ s.paciente.nome_exibicao }}</td>
+                    <td>
+                        <span class="badge {% if s.prioridade.value == 'emergência' %}bg-danger{% elif s.prioridade.value == 'urgente' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                            {{ s.prioridade.value }}
+                        </span>
+                    </td>
+                    <td class="small">
+                        {% for item in s.itens %}{{ item.nome_exame }}{% if not loop.last %}, {% endif %}{% endfor %}
+                    </td>
+                    <td><span class="badge bg-light text-dark">{{ s.status.value }}</span></td>
+                    <td class="small">{{ s.solicitado_em.strftime('%d/%m %H:%M') }}</td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            {% if s.status.value == 'solicitado' %}
+                            <form method="POST" action="{{ url_for('exames.coletar', id=s.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn btn-sm btn-warning py-0" title="Marcar coletado">
+                                    <i class="bi bi-droplet"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                            <a href="{{ url_for('exames.lancar_resultado', id=s.id) }}"
+                               class="btn btn-sm btn-success py-0" title="Lançar resultado">
+                                <i class="bi bi-clipboard-data"></i>
+                            </a>
+                            <a href="{{ url_for('exames.detalhe', id=s.id) }}"
+                               class="btn btn-sm btn-outline-primary py-0"><i class="bi bi-eye"></i></a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center text-muted py-5">
+            <i class="bi bi-check-circle display-4 text-success"></i>
+            <p class="mt-2">Nenhum exame pendente de coleta.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

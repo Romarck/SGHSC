@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+{% block title %}Compras — Nova solicitação{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-cart-plus me-2 text-primary"></i>Nova solicitação</h4>
+</div>
+
+<div class="card shadow-sm"><div class="card-body">
+<form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="row g-3">
+        <div class="col-12">
+            <label class="form-label fw-semibold">Justificativa</label>
+            <textarea name="justificativa" class="form-control" rows="2"></textarea>
+        </div>
+    </div>
+
+    <hr class="my-4">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h6 class="mb-0">Itens</h6>
+        <button type="button" class="btn btn-sm btn-outline-primary" onclick="adicionarLinha()"><i class="bi bi-plus-lg me-1"></i>Adicionar item</button>
+    </div>
+    <div class="table-responsive"><table class="table table-sm align-middle">
+        <thead class="table-light"><tr><th>Produto</th><th>Descrição</th><th style="width:140px">Quantidade</th><th style="width:50px"></th></tr></thead>
+        <tbody id="itens-body"></tbody>
+    </table></div>
+
+    <div class="d-flex justify-content-end gap-2 mt-4">
+        <a href="{{ url_for('compras.solicitacoes') }}" class="btn btn-outline-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Salvar</button>
+    </div>
+</form>
+</div></div>
+
+<template id="tpl-item">
+    <tr>
+        <td>
+            <select name="produto_id" class="form-select form-select-sm">
+                <option value="">— (avulso) —</option>
+                {% for p in produtos %}<option value="{{ p.id }}">{{ p.nome }}</option>{% endfor %}
+            </select>
+        </td>
+        <td><input type="text" name="descricao" class="form-control form-control-sm" required></td>
+        <td><input type="number" name="quantidade" class="form-control form-control-sm" min="1" value="1"></td>
+        <td><button type="button" class="btn btn-sm btn-outline-danger py-0" onclick="this.closest('tr').remove()"><i class="bi bi-trash"></i></button></td>
+    </tr>
+</template>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function adicionarLinha() {
+    const tpl = document.getElementById('tpl-item');
+    const clone = tpl.content.cloneNode(true);
+    document.getElementById('itens-body').appendChild(clone);
+}
+document.addEventListener('DOMContentLoaded', adicionarLinha);
+</script>
+{% endblock %}

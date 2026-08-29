@@ -1,0 +1,64 @@
+{% extends "layout.html" %}
+{% block title %}Mapa Cirúrgico{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-grid-3x3-gap me-2 text-primary"></i>Mapa Cirúrgico — {{ hoje.strftime('%d/%m/%Y') }}</h4>
+    <a href="{{ url_for('cirurgias.escala') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Escala
+    </a>
+</div>
+
+<div class="row g-3">
+    {% for sala in salas %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header py-2 bg-primary text-white">
+                <i class="bi bi-door-open me-2"></i>{{ sala.nome }}
+            </div>
+            <div class="card-body p-2">
+                {% set cirurgias_sala = por_sala[sala.id] %}
+                {% if cirurgias_sala %}
+                    {% for c in cirurgias_sala %}
+                    <div class="border rounded p-2 mb-2">
+                        <div class="d-flex justify-content-between">
+                            <span class="fw-semibold small">{{ c.data_agendada.strftime('%H:%M') }}</span>
+                            <span class="badge bg-{{ c.cor_status }}">{{ c.status.value }}</span>
+                        </div>
+                        <div class="small">{{ c.paciente.nome_exibicao }}</div>
+                        <div class="small text-muted">{{ c.procedimento }}</div>
+                        <a href="{{ url_for('cirurgias.detalhe', id=c.id) }}"
+                           class="btn btn-sm btn-outline-primary py-0 mt-1"><i class="bi bi-eye"></i></a>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="text-center text-muted small py-3">Sem cirurgias agendadas.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if sem_sala %}
+<div class="card shadow-sm mt-3 border-warning">
+    <div class="card-header py-2 bg-warning text-dark"><i class="bi bi-exclamation-triangle me-2"></i>Sem sala definida</div>
+    <div class="card-body p-2">
+        {% for c in sem_sala %}
+        <div class="d-flex justify-content-between border-bottom py-1 small">
+            <span>{{ c.data_agendada.strftime('%H:%M') }} — {{ c.paciente.nome_exibicao }} ({{ c.procedimento }})</span>
+            <a href="{{ url_for('cirurgias.agendar', id=c.id) }}" class="btn btn-sm btn-outline-warning py-0">
+                Definir sala
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if not salas %}
+<div class="alert alert-info mt-3">
+    Nenhuma sala cadastrada. <a href="{{ url_for('cirurgias.salas') }}">Cadastre salas cirúrgicas</a>.
+</div>
+{% endif %}
+{% endblock %}

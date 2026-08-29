@@ -1,0 +1,59 @@
+{% extends "layout.html" %}
+{% block title %}Descrição Cirúrgica{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-file-text me-2 text-primary"></i>Descrição Cirúrgica</h4>
+    <a href="{{ url_for('cirurgias.detalhe', id=cir.id) }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Voltar
+    </a>
+</div>
+
+<div class="card bg-light border-0 mb-3">
+    <div class="card-body py-2 small">
+        <strong>{{ cir.numero }}</strong> — {{ cir.paciente.nome_exibicao }} —
+        {{ cir.procedimento }} — Cirurgião: {{ cir.cirurgiao.nome }}
+    </div>
+</div>
+
+<form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Descrição cirúrgica (nota de sala)</label>
+                <textarea name="descricao_cirurgica" class="form-control" rows="5">{{ cir.descricao_cirurgica or '' }}</textarea>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Achados</label>
+                    <textarea name="achados" class="form-control" rows="3">{{ cir.achados or '' }}</textarea>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Procedimento realizado</label>
+                    <textarea name="procedimento_realizado" class="form-control" rows="3">{{ cir.procedimento_realizado or '' }}</textarea>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Intercorrências</label>
+                    <textarea name="intercorrencias" class="form-control" rows="2">{{ cir.intercorrencias or '' }}</textarea>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Equipe</label>
+                    <textarea name="equipe" class="form-control" rows="2">{{ cir.equipe or '' }}</textarea>
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Material utilizado</label>
+                    <textarea name="material_utilizado" class="form-control" rows="2">{{ cir.material_utilizado or '' }}</textarea>
+                </div>
+            </div>
+            <hr class="my-3">
+            <div class="d-flex justify-content-end gap-2">
+                <a href="{{ url_for('cirurgias.detalhe', id=cir.id) }}" class="btn btn-outline-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg me-1"></i>Salvar descrição
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}

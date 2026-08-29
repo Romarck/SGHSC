@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+{% block title %}Estoque — Locais{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-geo-alt me-2 text-secondary"></i>Locais de estoque</h4>
+    <a href="{{ url_for('estoque.produtos') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="card shadow-sm"><div class="card-body">
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Nome</label>
+                <input type="text" name="nome" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Descrição</label>
+                <textarea name="descricao" class="form-control" rows="2"></textarea>
+            </div>
+            <div class="form-check mb-3">
+                <input type="checkbox" name="principal" value="1" class="form-check-input" id="principal">
+                <label class="form-check-label" for="principal">Local principal</label>
+            </div>
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Salvar</button>
+            </div>
+        </form>
+        </div></div>
+    </div>
+    <div class="col-md-8">
+        <div class="card shadow-sm"><div class="card-body p-0">
+        {% if locais %}
+        <div class="table-responsive"><table class="table table-hover mb-0">
+            <thead class="table-light"><tr><th>Nome</th><th>Descrição</th><th></th></tr></thead>
+            <tbody>
+            {% for l in locais %}
+            <tr>
+                <td class="fw-semibold">{{ l.nome }}</td>
+                <td class="small text-muted">{{ l.descricao }}</td>
+                <td>{% if l.principal %}<span class="badge bg-primary">Principal</span>{% endif %}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table></div>
+        {% else %}
+        <div class="text-center text-muted py-5"><i class="bi bi-geo-alt display-4"></i><p class="mt-2">Nenhum local cadastrado.</p></div>
+        {% endif %}
+        </div></div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,138 @@
+{% extends "layout.html" %}
+{% block title %}Registrar Parto{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-heart-pulse me-2 text-danger"></i>Registrar Parto</h4>
+    <a href="{{ url_for('maternidade.painel') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Voltar
+    </a>
+</div>
+
+<form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-header py-2"><i class="bi bi-search me-2"></i>Gestante</div>
+                <div class="card-body">
+                    <input type="search" name="q" class="form-control mb-2"
+                           placeholder="Nome, CPF ou CNS..."
+                           hx-get="{{ url_for('pacientes.busca_htmx') }}"
+                           hx-trigger="keyup changed delay:400ms"
+                           hx-target="#resultado-busca-parto" autocomplete="off">
+                    <div id="resultado-busca-parto" class="border rounded"></div>
+                    <input type="hidden" name="gestante_id" id="paciente_id_input"
+                           value="{{ paciente.id if paciente else '' }}">
+                    <div id="paciente-selecionado" class="alert alert-success mt-2 py-1 small {% if not paciente %}d-none{% endif %}">
+                        <span id="nome-paciente-display">{{ paciente.nome_exibicao if paciente else '' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-3">
+                <div class="card-header py-2 bg-danger text-white"><i class="bi bi-clipboard2-pulse me-2"></i>Dados do parto</div>
+                <div class="card-body">
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Tipo *</label>
+                            <select name="tipo" class="form-select" required>
+                                {% for t in tipos %}
+                                <option value="{{ t.name }}">{{ t.value }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Data/hora *</label>
+                            <input type="datetime-local" name="data_parto" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">IG (semanas)</label>
+                            <input type="number" name="ig" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Anestesia</label>
+                            <input type="text" name="tipo_anestesia" class="form-control">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Intercorrências</label>
+                            <textarea name="intercorrencias" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header py-2 d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-emoji-smile me-2"></i>Recém-nascidos</span>
+                    <button type="button" class="btn btn-sm btn-success" onclick="addRN()"><i class="bi bi-plus-lg"></i></button>
+                </div>
+                <div class="card-body">
+                    <div id="lista-rn"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end mt-3">
+        <button type="submit" class="btn btn-danger px-4" id="btn-salvar" {% if not paciente %}disabled{% endif %}>
+            <i class="bi bi-check-lg me-1"></i>Registrar parto
+        </button>
+    </div>
+</form>
+
+<template id="tmpl-rn">
+    <div class="border rounded p-2 mb-2 rn-bloco">
+        <div class="row g-2">
+            <div class="col-md-3">
+                <label class="form-label small">Sexo *</label>
+                <select name="rn_sexo" class="form-select form-select-sm">
+                    {% for s in sexos %}
+                    <option value="{{ s.name }}">{{ s.value | capitalize }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small">Condição</label>
+                <select name="rn_condicao" class="form-select form-select-sm">
+                    {% for c in condicoes %}
+                    <option value="{{ c.name }}">{{ c.value | capitalize }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Peso (g)</label>
+                <input type="number" name="rn_peso" class="form-control form-control-sm">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Apgar 1'</label>
+                <input type="number" name="rn_apgar1" class="form-control form-control-sm" min="0" max="10">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Apgar 5'</label>
+                <input type="number" name="rn_apgar5" class="form-control form-control-sm" min="0" max="10">
+            </div>
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-danger py-0 mt-1"
+                onclick="this.closest('.rn-bloco').remove()"><i class="bi bi-trash"></i> Remover</button>
+    </div>
+</template>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function addRN() {
+    const t = document.getElementById('tmpl-rn');
+    document.getElementById('lista-rn').appendChild(t.content.cloneNode(true));
+}
+function selecionarPaciente(id, nome) {
+    document.getElementById('paciente_id_input').value = id;
+    document.getElementById('nome-paciente-display').textContent = nome;
+    document.getElementById('paciente-selecionado').classList.remove('d-none');
+    document.getElementById('btn-salvar').disabled = false;
+    document.getElementById('resultado-busca-parto').innerHTML = '';
+}
+document.addEventListener('DOMContentLoaded', addRN);
+</script>
+{% endblock %}

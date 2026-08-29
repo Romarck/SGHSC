@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+{% block title %}Agendar Cirurgia{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-7">
+        <div class="d-flex align-items-center mb-3">
+            <a href="{{ url_for('cirurgias.detalhe', id=cir.id) }}" class="btn btn-sm btn-outline-secondary me-3">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <h4 class="mb-0"><i class="bi bi-calendar-plus me-2 text-info"></i>Agendar Cirurgia</h4>
+        </div>
+
+        <div class="card bg-light border-0 mb-3">
+            <div class="card-body py-2 small">
+                <strong>{{ cir.numero }}</strong> — {{ cir.paciente.nome_exibicao }} — {{ cir.procedimento }}
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Data e hora *</label>
+                            <input type="datetime-local" name="data_agendada" class="form-control"
+                                   value="{{ cir.data_agendada.strftime('%Y-%m-%dT%H:%M') if cir.data_agendada else '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Sala</label>
+                            <select name="sala_id" class="form-select">
+                                <option value="">—</option>
+                                {% for s in salas %}
+                                <option value="{{ s.id }}" {% if cir.sala_id == s.id %}selected{% endif %}>{{ s.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Duração estimada (min)</label>
+                            <input type="number" name="duracao" class="form-control"
+                                   value="{{ cir.duracao_estimada_min or '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Anestesista</label>
+                            <select name="anestesista_id" class="form-select">
+                                <option value="">—</option>
+                                {% for m in medicos %}
+                                <option value="{{ m.id }}" {% if cir.anestesista_id == m.id %}selected{% endif %}>{{ m.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <hr class="my-3">
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{{ url_for('cirurgias.detalhe', id=cir.id) }}" class="btn btn-outline-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-info">
+                            <i class="bi bi-check-lg me-1"></i>Agendar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

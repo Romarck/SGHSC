@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+{% block title %}Estoque — Movimentar{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-arrow-left-right me-2 text-secondary"></i>Movimentar estoque</h4>
+</div>
+
+<div class="card shadow-sm mb-3"><div class="card-body py-2">
+    <div class="d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">{{ produto.nome }}</span>
+        <span class="text-muted">Estoque atual: <strong>{{ produto.estoque_total }}</strong></span>
+    </div>
+</div></div>
+
+<div class="card shadow-sm"><div class="card-body">
+<form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Local</label>
+            <select name="local_id" class="form-select" required>
+                {% for l in locais %}<option value="{{ l.id }}">{{ l.nome }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Tipo</label>
+            <select name="tipo" class="form-select">
+                {% for e in tipos %}<option value="{{ e.name }}">{{ e.value }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label fw-semibold">Quantidade</label>
+            <input type="number" name="quantidade" class="form-control" min="1" required>
+        </div>
+        <div class="col-md-8">
+            <label class="form-label fw-semibold">Motivo</label>
+            <input type="text" name="motivo" class="form-control">
+        </div>
+    </div>
+    <div class="d-flex justify-content-end gap-2 mt-4">
+        <a href="{{ url_for('estoque.produtos') }}" class="btn btn-outline-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Salvar</button>
+    </div>
+</form>
+</div></div>
+{% endblock %}

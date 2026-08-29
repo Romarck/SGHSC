@@ -1,0 +1,273 @@
+{% extends "layout.html" %}
+{% block title %}Nova Prescrição — {{ internacao.paciente.nome_exibicao }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">
+        <i class="bi bi-capsule me-2 text-primary"></i>Nova Prescrição Médica
+    </h4>
+    <a href="{{ url_for('internacao.prontuario', id=internacao.id) }}"
+       class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Voltar ao prontuário
+    </a>
+</div>
+
+{# Cabeçalho do paciente #}
+<div class="card bg-light mb-3 border-0">
+    <div class="card-body py-2">
+        <div class="row small">
+            <div class="col-sm-4">
+                <strong>Paciente:</strong> {{ internacao.paciente.nome_exibicao }}
+                ({{ internacao.paciente.idade }} anos)
+            </div>
+            <div class="col-sm-3">
+                <strong>Internação:</strong> {{ internacao.numero }}
+            </div>
+            <div class="col-sm-3">
+                <strong>Leito:</strong> {{ internacao.leito.numero }} — {{ internacao.leito.tipo.value }}
+            </div>
+            <div class="col-sm-2">
+                <strong>Dia {{ internacao.dias_internado + 1 }}º</strong> de internação
+            </div>
+        </div>
+        {% if internacao.paciente.alergias %}
+        <div class="text-danger fw-semibold small mt-1">
+            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+            Alergias: {{ internacao.paciente.alergias }}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<form method="POST" id="form-prescricao">
+    {{ form.hidden_tag() }}
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-primary text-white py-2">
+            <i class="bi bi-calendar-event me-2"></i>Dados da Prescrição
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-sm-3">
+                    <label class="form-label fw-semibold">{{ form.data_prescricao.label.text }}</label>
+                    <input type="date" name="data_prescricao" class="form-control"
+                           value="{{ form.data_prescricao.data.isoformat() if form.data_prescricao.data else '' }}">
+                </div>
+                <div class="col-sm-9">
+                    <label class="form-label fw-semibold">{{ form.observacoes.label.text }}</label>
+                    <input type="text" name="observacoes" class="form-control"
+                           value="{{ form.observacoes.data or '' }}"
+                           placeholder="Observações gerais da prescrição">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Tabela de itens #}
+    <div class="card shadow-sm mb-3">
+        <div class="card-header py-2 d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-list-check me-2"></i>Itens da Prescrição</span>
+            <button type="button" class="btn btn-sm btn-success" onclick="adicionarItem()">
+                <i class="bi bi-plus-lg me-1"></i>Adicionar item
+            </button>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-sm mb-0" id="tabela-itens">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:2%"></th>
+                            <th style="width:10%">Tipo</th>
+                            <th style="width:22%">Medicamento / Item *</th>
+                            <th style="width:8%">Dose</th>
+                            <th style="width:8%">Via</th>
+                            <th style="width:12%">Frequência</th>
+                            <th style="width:10%">Duração</th>
+                            <th style="width:10%">Horários</th>
+                            <th style="width:12%">Diluição</th>
+                            <th style="width:6%"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="itens-body">
+                        {# Cópia da prescrição anterior se houver #}
+                        {% if prescricao_anterior and prescricao_anterior.itens %}
+                            {% for item in prescricao_anterior.itens %}
+                            {% if item.status.value == 'ativo' %}
+                            <tr class="item-row">
+                                <td class="text-muted small align-middle text-center">
+                                    <i class="bi bi-grip-vertical"></i>
+                                </td>
+                                <td>
+                                    <select name="item_tipo" class="form-select form-select-sm">
+                                        {% for t in tipos_item %}
+                                        <option value="{{ t.name }}"
+                                            {% if t == item.tipo %}selected{% endif %}>
+                                            {{ t.value }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="text" name="item_descricao" class="form-control form-control-sm"
+                                           value="{{ item.descricao }}" required>
+                                </td>
+                                <td>
+                                    <input type="text" name="item_dose" class="form-control form-control-sm"
+                                           value="{{ item.dose or '' }}" placeholder="500mg">
+                                </td>
+                                <td>
+                                    <select name="item_via" class="form-select form-select-sm">
+                                        <option value=""></option>
+                                        {% for v in vias %}
+                                        <option value="{{ v.name }}"
+                                            {% if item.via and v == item.via %}selected{% endif %}>
+                                            {{ v.value }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td>
+                                    <select name="item_frequencia" class="form-select form-select-sm">
+                                        <option value=""></option>
+                                        {% for f in frequencias %}
+                                        <option value="{{ f.name }}"
+                                            {% if item.frequencia and f == item.frequencia %}selected{% endif %}>
+                                            {{ f.value }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="text" name="item_duracao" class="form-control form-control-sm"
+                                           value="{{ item.duracao or '' }}" placeholder="5 dias">
+                                </td>
+                                <td>
+                                    <input type="text" name="item_horarios" class="form-control form-control-sm"
+                                           value="{{ item.horarios or '' }}" placeholder="06h 18h">
+                                </td>
+                                <td>
+                                    <input type="text" name="item_diluicao" class="form-control form-control-sm"
+                                           value="{{ item.diluicao or '' }}" placeholder="100mL SF">
+                                </td>
+                                <td class="text-center align-middle">
+                                    <button type="button" class="btn btn-sm btn-outline-danger py-0"
+                                            onclick="removerItem(this)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="aviso-sem-itens"
+                 class="text-center text-muted py-3
+                 {% if prescricao_anterior and prescricao_anterior.itens %}d-none{% endif %}">
+                <i class="bi bi-capsule me-1"></i>
+                Nenhum item adicionado.
+                {% if prescricao_anterior %}
+                <br><small>Os itens ativos da prescrição anterior foram copiados automaticamente.</small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2">
+        <a href="{{ url_for('internacao.prontuario', id=internacao.id) }}"
+           class="btn btn-outline-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary px-4">
+            <i class="bi bi-check-lg me-1"></i>Salvar prescrição
+        </button>
+    </div>
+</form>
+
+{# Template HTML de nova linha (clonado via JS) #}
+<template id="template-item">
+    <tr class="item-row">
+        <td class="text-muted small align-middle text-center">
+            <i class="bi bi-grip-vertical"></i>
+        </td>
+        <td>
+            <select name="item_tipo" class="form-select form-select-sm">
+                {% for t in tipos_item %}
+                <option value="{{ t.name }}">{{ t.value }}</option>
+                {% endfor %}
+            </select>
+        </td>
+        <td>
+            <input type="text" name="item_descricao" class="form-control form-control-sm"
+                   placeholder="Nome do medicamento ou item" required>
+        </td>
+        <td>
+            <input type="text" name="item_dose" class="form-control form-control-sm"
+                   placeholder="500mg">
+        </td>
+        <td>
+            <select name="item_via" class="form-select form-select-sm">
+                <option value=""></option>
+                {% for v in vias %}
+                <option value="{{ v.name }}">{{ v.value }}</option>
+                {% endfor %}
+            </select>
+        </td>
+        <td>
+            <select name="item_frequencia" class="form-select form-select-sm">
+                <option value=""></option>
+                {% for f in frequencias %}
+                <option value="{{ f.name }}">{{ f.value }}</option>
+                {% endfor %}
+            </select>
+        </td>
+        <td>
+            <input type="text" name="item_duracao" class="form-control form-control-sm"
+                   placeholder="5 dias">
+        </td>
+        <td>
+            <input type="text" name="item_horarios" class="form-control form-control-sm"
+                   placeholder="06h 18h">
+        </td>
+        <td>
+            <input type="text" name="item_diluicao" class="form-control form-control-sm"
+                   placeholder="100mL SF">
+        </td>
+        <td class="text-center align-middle">
+            <button type="button" class="btn btn-sm btn-outline-danger py-0"
+                    onclick="removerItem(this)">
+                <i class="bi bi-trash"></i>
+            </button>
+        </td>
+    </tr>
+</template>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function adicionarItem() {
+    const tmpl = document.getElementById('template-item');
+    const clone = tmpl.content.cloneNode(true);
+    document.getElementById('itens-body').appendChild(clone);
+    document.getElementById('aviso-sem-itens').classList.add('d-none');
+    // foca no campo de descrição do novo item
+    const rows = document.querySelectorAll('#itens-body tr.item-row');
+    const lastRow = rows[rows.length - 1];
+    if (lastRow) lastRow.querySelector('[name="item_descricao"]').focus();
+}
+
+function removerItem(btn) {
+    btn.closest('tr').remove();
+    const rows = document.querySelectorAll('#itens-body tr.item-row');
+    if (rows.length === 0) {
+        document.getElementById('aviso-sem-itens').classList.remove('d-none');
+    }
+}
+
+// Adiciona uma linha vazia se não houver itens copiados
+document.addEventListener('DOMContentLoaded', function() {
+    const rows = document.querySelectorAll('#itens-body tr.item-row');
+    if (rows.length === 0) adicionarItem();
+});
+</script>
+{% endblock %}

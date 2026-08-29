@@ -1,0 +1,184 @@
+{% extends "layout.html" %}
+{% block title %}Mapa de Leitos{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">
+        <i class="bi bi-grid-3x3-gap me-2 text-warning"></i>Mapa de Leitos
+    </h4>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('internacao.admitir') }}" class="btn btn-primary">
+            <i class="bi bi-person-plus me-1"></i>Admitir paciente
+        </a>
+        <a href="{{ url_for('internacao.novo_leito') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-plus-square me-1"></i>Cadastrar leito
+        </a>
+    </div>
+</div>
+
+{# Contadores resumo #}
+<div class="row g-2 mb-4"
+     id="contadores-leitos"
+     hx-get="{{ url_for('internacao.mapa_leitos') }}"
+     hx-trigger="every 60s"
+     hx-target="#mapa-container"
+     hx-swap="outerHTML">
+</div>
+
+{# Contadores estáticos (atualizados junto com o mapa) #}
+<div class="row g-2 mb-3">
+    <div class="col-6 col-md-3">
+        <div class="card text-center border-success">
+            <div class="card-body py-2">
+                <div class="fs-3 fw-bold text-success">{{ livres }}</div>
+                <small class="text-muted"><i class="bi bi-check-circle me-1"></i>Livres</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center border-danger">
+            <div class="card-body py-2">
+                <div class="fs-3 fw-bold text-danger">{{ ocupados }}</div>
+                <small class="text-muted"><i class="bi bi-person-fill me-1"></i>Ocupados</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center border-warning">
+            <div class="card-body py-2">
+                <div class="fs-3 fw-bold text-warning">{{ total - livres - ocupados }}</div>
+                <small class="text-muted"><i class="bi bi-hourglass-split me-1"></i>Outros</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center border-secondary">
+            <div class="card-body py-2">
+                <div class="fs-3 fw-bold text-secondary">{{ total }}</div>
+                <small class="text-muted"><i class="bi bi-hospital me-1"></i>Total</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Legenda #}
+<div class="d-flex flex-wrap gap-2 mb-3 small">
+    <span class="badge bg-success py-2 px-3"><i class="bi bi-circle-fill me-1"></i>Livre</span>
+    <span class="badge bg-danger py-2 px-3"><i class="bi bi-circle-fill me-1"></i>Ocupado</span>
+    <span class="badge bg-warning text-dark py-2 px-3"><i class="bi bi-circle-fill me-1"></i>Reservado</span>
+    <span class="badge bg-info text-dark py-2 px-3"><i class="bi bi-circle-fill me-1"></i>Limpeza</span>
+    <span class="badge bg-secondary py-2 px-3"><i class="bi bi-circle-fill me-1"></i>Manutenção</span>
+    <span class="badge bg-dark py-2 px-3"><i class="bi bi-circle-fill me-1"></i>Bloqueado</span>
+    <span class="ms-3 text-muted"><i class="bi bi-shield-exclamation me-1 text-danger"></i>= Isolamento (CCIH)</span>
+    <span class="ms-auto text-muted fst-italic">
+        <i class="bi bi-arrow-clockwise me-1"></i>Atualização automática a cada 60s
+    </span>
+</div>
+
+{# Mapa por ala — alvo do HTMX polling #}
+<div id="mapa-container"
+     hx-get="{{ url_for('internacao.mapa_leitos') }}"
+     hx-trigger="every 60s"
+     hx-target="#mapa-container"
+     hx-swap="innerHTML">
+
+    {% if alas %}
+        {% for ala, leitos_ala in alas.items() %}
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
+                <span class="fw-semibold">
+                    <i class="bi bi-building me-2 text-primary"></i>{{ ala }}
+                </span>
+                <span class="text-muted small">
+                    {{ leitos_ala | selectattr('status.value', 'equalto', 'livre') | list | length }}
+                    livres de {{ leitos_ala | length }}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row g-2">
+                    {% for leito in leitos_ala %}
+                    <div class="col-6 col-sm-4 col-md-3 col-xl-2">
+                        <div class="card card-leito border-{{ leito.cor_status }} h-100
+                                    {% if leito.isolamento %}leito-isolamento{% endif %}">
+                            <div class="card-body p-2 text-center position-relative">
+
+                                {# Ícone de isolamento #}
+                                {% if leito.isolamento %}
+                                <span class="badge bg-danger position-absolute top-0 end-0 m-1"
+                                      title="Isolamento CCIH" style="font-size:.65rem">
+                                    <i class="bi bi-shield-exclamation"></i>
+                                </span>
+                                {% endif %}
+
+                                {# Número do leito #}
+                                <div class="fw-bold fs-5 text-{{ leito.cor_status }}">
+                                    {{ leito.numero }}
+                                </div>
+
+                                {# Tipo #}
+                                <div class="text-muted" style="font-size:.7rem">
+                                    {{ leito.tipo.value }}
+                                    {% if leito.quarto %}<br>Q.{{ leito.quarto }}{% endif %}
+                                </div>
+
+                                {# Status badge #}
+                                <span class="badge bg-{{ leito.cor_status }} mt-1 w-100"
+                                      style="font-size:.68rem">
+                                    {{ leito.status.value }}
+                                </span>
+
+                                {# Paciente se ocupado #}
+                                {% if leito.internacao_ativa %}
+                                {% set int = leito.internacao_ativa %}
+                                <div class="mt-1 border-top pt-1" style="font-size:.7rem">
+                                    <a href="{{ url_for('internacao.prontuario', id=int.id) }}"
+                                       class="text-decoration-none text-dark fw-semibold">
+                                        {{ int.paciente.nome.split()[0] }}
+                                        {{ int.paciente.nome.split()[-1] }}
+                                    </a>
+                                    <div class="text-muted">{{ int.dias_internado }}d internado</div>
+                                    <div class="text-muted">{{ int.medico_responsavel.nome.split()[0] }}</div>
+                                </div>
+                                {% endif %}
+
+                                {# Ações #}
+                                <div class="mt-2 d-flex justify-content-center gap-1">
+                                    {% if leito.status.value == 'livre' or leito.status.value == 'reservado' %}
+                                    <a href="{{ url_for('internacao.admitir') }}?leito_id={{ leito.id }}"
+                                       class="btn btn-sm btn-outline-success py-0 px-1"
+                                       title="Admitir neste leito" style="font-size:.7rem">
+                                        <i class="bi bi-person-plus"></i>
+                                    </a>
+                                    {% endif %}
+                                    {% if leito.internacao_ativa %}
+                                    <a href="{{ url_for('internacao.prontuario', id=leito.internacao_ativa.id) }}"
+                                       class="btn btn-sm btn-outline-primary py-0 px-1"
+                                       title="Ver prontuário" style="font-size:.7rem">
+                                        <i class="bi bi-clipboard2-pulse"></i>
+                                    </a>
+                                    <a href="{{ url_for('internacao.transferir', id=leito.internacao_ativa.id) }}"
+                                       class="btn btn-sm btn-outline-warning py-0 px-1"
+                                       title="Transferir leito" style="font-size:.7rem">
+                                        <i class="bi bi-arrow-left-right"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="text-center text-muted py-5">
+            <i class="bi bi-hospital display-4"></i>
+            <p class="mt-3">Nenhum leito cadastrado ainda.</p>
+            <a href="{{ url_for('internacao.novo_leito') }}" class="btn btn-primary">
+                <i class="bi bi-plus-square me-1"></i>Cadastrar leitos
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

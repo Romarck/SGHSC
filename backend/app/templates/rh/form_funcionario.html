@@ -1,0 +1,75 @@
+{% extends "layout.html" %}
+{% block title %}RH — Novo funcionário{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-person-plus me-2 text-primary"></i>Novo funcionário</h4>
+</div>
+
+<div class="card shadow-sm"><div class="card-body">
+<form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="row g-3">
+        <div class="col-md-3">
+            <label class="form-label fw-semibold">Matrícula</label>
+            <input type="text" name="matricula" class="form-control" required>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Nome</label>
+            <input type="text" name="nome" class="form-control" required>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label fw-semibold">CPF</label>
+            <input type="text" name="cpf" class="form-control">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label fw-semibold">Cargo</label>
+            <input type="text" name="cargo" class="form-control">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label fw-semibold">Setor</label>
+            <select name="setor_id" class="form-select">
+                <option value="">— nenhum —</option>
+                {% for s in setores %}<option value="{{ s.id }}">{{ s.nome }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label fw-semibold">Vínculo</label>
+            <select name="vinculo" class="form-select">
+                {% for e in vinculos %}<option value="{{ e.name }}">{{ e.value }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label fw-semibold">Status</label>
+            <select name="status" class="form-select">
+                {% for e in status_opcoes %}<option value="{{ e.name }}">{{ e.value }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label fw-semibold">Conselho (tipo)</label>
+            <input type="text" name="conselho_tipo" class="form-control">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label fw-semibold">Conselho (número)</label>
+            <input type="text" name="conselho_numero" class="form-control">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label fw-semibold">Telefone</label>
+            <input type="text" name="telefone" class="form-control">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">E-mail</label>
+            <input type="email" name="email" class="form-control">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label fw-semibold">Data de admissão</label>
+            <input type="date" name="data_admissao" class="form-control">
+        </div>
+    </div>
+    <div class="d-flex justify-content-end gap-2 mt-4">
+        <a href="{{ url_for('rh.funcionarios') }}" class="btn btn-outline-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Salvar</button>
+    </div>
+</form>
+</div></div>
+{% endblock %}

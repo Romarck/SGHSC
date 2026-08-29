@@ -1,0 +1,99 @@
+{% extends "layout.html" %}
+{% block title %}Cirurgia {{ cir.numero }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-scissors me-2 text-primary"></i>Cirurgia {{ cir.numero }}</h4>
+    <a href="{{ url_for('cirurgias.escala') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Voltar
+    </a>
+</div>
+
+<div class="card border-primary mb-3">
+    <div class="card-body py-2">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h5 class="mb-0">{{ cir.paciente.nome_exibicao }}</h5>
+                <small class="text-muted">{{ cir.procedimento }}</small>
+            </div>
+            <span class="badge bg-{{ cir.cor_status }} fs-6">{{ cir.status.value }}</span>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-7">
+        <div class="card shadow-sm">
+            <div class="card-header py-2"><i class="bi bi-info-circle me-2"></i>Detalhes</div>
+            <div class="card-body">
+                <dl class="row mb-0 small">
+                    <dt class="col-sm-4">Cirurgião</dt><dd class="col-sm-8">{{ cir.cirurgiao.nome }}</dd>
+                    <dt class="col-sm-4">Anestesista</dt><dd class="col-sm-8">{{ cir.anestesista.nome if cir.anestesista else '—' }}</dd>
+                    <dt class="col-sm-4">Tipo</dt><dd class="col-sm-8">{{ cir.tipo.value }}</dd>
+                    <dt class="col-sm-4">Porte</dt><dd class="col-sm-8">{{ cir.porte.value if cir.porte else '—' }}</dd>
+                    <dt class="col-sm-4">Anestesia</dt><dd class="col-sm-8">{{ cir.tipo_anestesia.value if cir.tipo_anestesia else '—' }}</dd>
+                    <dt class="col-sm-4">Sala</dt><dd class="col-sm-8">{{ cir.sala.nome if cir.sala else '—' }}</dd>
+                    <dt class="col-sm-4">Data agendada</dt><dd class="col-sm-8">{{ cir.data_agendada.strftime('%d/%m/%Y %H:%M') if cir.data_agendada else '—' }}</dd>
+                    {% if cir.duracao_real_min %}
+                    <dt class="col-sm-4">Duração real</dt><dd class="col-sm-8">{{ cir.duracao_real_min }} min</dd>
+                    {% endif %}
+                </dl>
+                {% if cir.descricao_cirurgica %}
+                <hr>
+                <strong class="small">Descrição cirúrgica:</strong>
+                <p class="small mb-0">{{ cir.descricao_cirurgica }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-5">
+        <div class="card shadow-sm mb-3">
+            <div class="card-header py-2"><i class="bi bi-arrow-repeat me-2"></i>Fluxo</div>
+            <div class="card-body">
+                <div class="d-grid gap-2 mb-3">
+                    <a href="{{ url_for('cirurgias.agendar', id=cir.id) }}" class="btn btn-outline-info btn-sm">
+                        <i class="bi bi-calendar-plus me-1"></i>Agendar / editar sala
+                    </a>
+                    {% if cir.descricao_assinada %}
+                    <span class="btn btn-success btn-sm disabled">
+                        <i class="bi bi-patch-check me-1"></i>Descrição assinada
+                    </span>
+                    {% else %}
+                    <a href="{{ url_for('cirurgias.descricao', id=cir.id) }}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-file-text me-1"></i>Descrição cirúrgica
+                    </a>
+                    {% if cir.descricao_cirurgica or cir.procedimento_realizado %}
+                    <form method="POST" action="{{ url_for('cirurgias.assinar_descricao', id=cir.id) }}"
+                          onsubmit="return confirm('Assinar digitalmente a descrição cirúrgica? Após assinada, não poderá ser alterada.')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-primary btn-sm w-100"><i class="bi bi-pen me-1"></i>Assinar descrição</button>
+                    </form>
+                    {% endif %}
+                    {% endif %}
+                </div>
+                <form method="POST" action="{{ url_for('cirurgias.mudar_status', id=cir.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <label class="form-label small fw-semibold">Alterar status</label>
+                    <div class="input-group">
+                        <select name="status" class="form-select form-select-sm">
+                            {% for s in StatusCirurgia %}
+                            <option value="{{ s.name }}" {% if cir.status == s %}selected{% endif %}>{{ s.value | capitalize }}</option>
+                            {% endfor %}
+                        </select>
+                        <button class="btn btn-sm btn-primary"><i class="bi bi-check-lg"></i></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="card shadow-sm">
+            <div class="card-header py-2"><i class="bi bi-clock me-2"></i>Tempos de sala</div>
+            <div class="card-body small">
+                <div>Entrada: {{ cir.entrada_sala_em.strftime('%H:%M') if cir.entrada_sala_em else '—' }}</div>
+                <div>Início: {{ cir.inicio_cirurgia_em.strftime('%H:%M') if cir.inicio_cirurgia_em else '—' }}</div>
+                <div>Fim: {{ cir.fim_cirurgia_em.strftime('%H:%M') if cir.fim_cirurgia_em else '—' }}</div>
+                <div>Saída: {{ cir.saida_sala_em.strftime('%H:%M') if cir.saida_sala_em else '—' }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

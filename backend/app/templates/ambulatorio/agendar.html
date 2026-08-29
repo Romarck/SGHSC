@@ -1,0 +1,119 @@
+{% extends "layout.html" %}
+{% block title %}Agendar Consulta{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-calendar-plus me-2 text-success"></i>Agendar Consulta</h4>
+    <a href="{{ url_for('ambulatorio.agenda') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Voltar
+    </a>
+</div>
+
+<div class="row g-3">
+    {# Busca de paciente #}
+    <div class="col-md-5">
+        <div class="card shadow-sm">
+            <div class="card-header py-2"><i class="bi bi-search me-2"></i>Buscar paciente</div>
+            <div class="card-body">
+                <input type="search" name="q" class="form-control mb-2"
+                       placeholder="Nome, CPF ou CNS..."
+                       hx-get="{{ url_for('pacientes.busca_htmx') }}"
+                       hx-trigger="keyup changed delay:400ms"
+                       hx-target="#resultado-busca-amb"
+                       autocomplete="off" />
+                <div id="resultado-busca-amb" class="border rounded"></div>
+                {% if paciente %}
+                <div class="alert alert-success mt-2 py-1 small">
+                    <strong>Selecionado:</strong> {{ paciente.nome_exibicao }} ({{ paciente.idade }} anos)
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {# Formulário de agendamento #}
+    <div class="col-md-7">
+        <div class="card shadow-sm">
+            <div class="card-header py-2 bg-success text-white">
+                <i class="bi bi-calendar-check me-2"></i>Dados do agendamento
+            </div>
+            <div class="card-body">
+                <form method="POST" id="form-agendamento" novalidate>
+                    {{ form.hidden_tag() }}
+                    <input type="hidden" name="paciente_id" id="paciente_id_input"
+                           value="{{ form.paciente_id.data or '' }}" />
+
+                    <div id="paciente-selecionado" class="mb-3 {% if not paciente %}d-none{% endif %}">
+                        <label class="form-label">Paciente</label>
+                        <div class="form-control bg-light" id="nome-paciente-display">
+                            {{ paciente.nome_exibicao if paciente else '' }}
+                        </div>
+                    </div>
+
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.medico_id.label.text }}</label>
+                            <select name="medico_id" class="form-select {% if form.medico_id.errors %}is-invalid{% endif %}">
+                                {% for val, label in form.medico_id.choices %}
+                                <option value="{{ val }}" {% if form.medico_id.data == val %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            {% for e in form.medico_id.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.especialidade.label.text }}</label>
+                            <input type="text" name="especialidade" class="form-control {% if form.especialidade.errors %}is-invalid{% endif %}"
+                                value="{{ form.especialidade.data or '' }}" placeholder="Clínica geral, Cardiologia..." />
+                            {% for e in form.especialidade.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.data.label.text }}</label>
+                            <input type="date" name="data" class="form-control {% if form.data.errors %}is-invalid{% endif %}"
+                                value="{{ form.data.data.isoformat() if form.data.data else '' }}" />
+                            {% for e in form.data.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">{{ form.horario.label.text }}</label>
+                            <input type="time" name="horario" class="form-control {% if form.horario.errors %}is-invalid{% endif %}"
+                                value="{{ form.horario.data.strftime('%H:%M') if form.horario.data else '' }}" />
+                            {% for e in form.horario.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label">{{ form.tipo.label.text }}</label>
+                            <select name="tipo" class="form-select">
+                                {% for val, label in form.tipo.choices %}
+                                <option value="{{ val }}" {% if form.tipo.data == val %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">{{ form.observacoes_agendamento.label.text }}</label>
+                            <input type="text" name="observacoes_agendamento" class="form-control"
+                                value="{{ form.observacoes_agendamento.data or '' }}" />
+                        </div>
+                    </div>
+
+                    <div class="d-grid mt-3">
+                        <button type="submit" class="btn btn-success btn-lg"
+                                id="btn-agendar" {% if not paciente %}disabled{% endif %}>
+                            <i class="bi bi-check-circle me-2"></i>Confirmar agendamento
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function selecionarPaciente(id, nome) {
+    document.getElementById('paciente_id_input').value = id;
+    document.getElementById('nome-paciente-display').textContent = nome;
+    document.getElementById('paciente-selecionado').classList.remove('d-none');
+    document.getElementById('btn-agendar').disabled = false;
+    document.getElementById('resultado-busca-amb').innerHTML = '';
+}
+</script>
+{% endblock %}

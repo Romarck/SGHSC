@@ -1,0 +1,38 @@
+<div class="col-6 col-md-3">
+    <a href="{{ url_for('pacientes.listar') }}" class="text-decoration-none">
+        <div class="card border-info text-center h-100">
+            <div class="card-body py-3">
+                <div class="display-6 fw-bold text-info">{{ total_pacientes }}</div>
+                <small class="text-muted">Pacientes ativos</small>
+            </div>
+        </div>
+    </a>
+</div>
+<div class="col-6 col-md-3">
+    <a href="{{ url_for('emergencia.fila') }}" class="text-decoration-none">
+        <div class="card border-danger text-center h-100">
+            <div class="card-body py-3">
+                <div class="display-6 fw-bold text-danger">{{ fila_pa }}</div>
+                <small class="text-muted">Na fila do PA</small>
+            </div>
+        </div>
+    </a>
+</div>
+<div class="col-6 col-md-3">
+    <a href="{{ url_for('ambulatorio.agenda') }}" class="text-decoration-none">
+        <div class="card border-success text-center h-100">
+            <div class="card-body py-3">
+                <div class="display-6 fw-bold text-success">{{ consultas_hoje }}</div>
+                <small class="text-muted">Consultas hoje</small>
+            </div>
+        </div>
+    </a>
+</div>
+<div class="col-6 col-md-3">
+    <div class="card border-secondary text-center h-100">
+        <div class="card-body py-3">
+            <div class="display-6 fw-bold text-secondary">{{ atend_hoje }}</div>
+            <small class="text-muted">Atendimentos no PA hoje</small>
+        </div>
+    </div>
+</div>

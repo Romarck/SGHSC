@@ -1,0 +1,2 @@
+Webroot para o desafio ACME do Let's Encrypt (/.well-known/acme-challenge/).
+Mantido vazio no repositorio. Ver docs/deploy-tls.md.

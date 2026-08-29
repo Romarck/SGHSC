@@ -1,0 +1,101 @@
+{% extends "layout.html" %}
+{% block title %}Novo Pré-natal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-clipboard-heart me-2 text-primary"></i>Novo Pré-natal</h4>
+    <a href="{{ url_for('maternidade.painel') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Voltar
+    </a>
+</div>
+
+<form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-header py-2"><i class="bi bi-search me-2"></i>Gestante</div>
+                <div class="card-body">
+                    <input type="search" name="q" class="form-control mb-2"
+                           placeholder="Nome, CPF ou CNS..."
+                           hx-get="{{ url_for('pacientes.busca_htmx') }}"
+                           hx-trigger="keyup changed delay:400ms"
+                           hx-target="#resultado-busca-mat" autocomplete="off">
+                    <div id="resultado-busca-mat" class="border rounded"></div>
+                    <input type="hidden" name="gestante_id" id="paciente_id_input"
+                           value="{{ paciente.id if paciente else '' }}">
+                    <div id="paciente-selecionado" class="alert alert-success mt-2 py-1 small {% if not paciente %}d-none{% endif %}">
+                        <span id="nome-paciente-display">{{ paciente.nome_exibicao if paciente else '' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header py-2 bg-primary text-white"><i class="bi bi-clipboard-data me-2"></i>Dados obstétricos</div>
+                <div class="card-body">
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">DUM</label>
+                            <input type="date" name="dum" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">DPP</label>
+                            <input type="date" name="dpp" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Tipo sanguíneo</label>
+                            <input type="text" name="tipo_sanguineo" class="form-control" placeholder="O+">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Gestações (G)</label>
+                            <input type="number" name="gestacoes" class="form-control" value="0" min="0">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Partos (P)</label>
+                            <input type="number" name="partos" class="form-control" value="0" min="0">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Abortos (A)</label>
+                            <input type="number" name="abortos" class="form-control" value="0" min="0">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Cesáreas</label>
+                            <input type="number" name="cesareas" class="form-control" value="0" min="0">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Classificação de risco</label>
+                            <select name="classificacao_risco" class="form-select">
+                                {% for r in riscos %}
+                                <option value="{{ r.name }}">{{ r.value | capitalize }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Observações</label>
+                            <textarea name="observacoes" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end mt-3">
+                        <button type="submit" class="btn btn-primary" id="btn-salvar" {% if not paciente %}disabled{% endif %}>
+                            <i class="bi bi-check-lg me-1"></i>Cadastrar pré-natal
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function selecionarPaciente(id, nome) {
+    document.getElementById('paciente_id_input').value = id;
+    document.getElementById('nome-paciente-display').textContent = nome;
+    document.getElementById('paciente-selecionado').classList.remove('d-none');
+    document.getElementById('btn-salvar').disabled = false;
+    document.getElementById('resultado-busca-mat').innerHTML = '';
+}
+</script>
+{% endblock %}

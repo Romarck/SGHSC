@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}SGHSC{% endblock %} — {{ instituicao_nome }}</title>
+
+    <!-- Bootstrap 5 -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+
+    <!-- CSS customizado -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sghsc.css') }}" />
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-light">
+
+    {% if current_user.is_authenticated %}
+    <!-- Navbar principal -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="{{ url_for('main.dashboard') }}">
+                <i class="bi bi-hospital me-2"></i>SGHSC
+            </a>
+            <button class="navbar-toggler" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#navbarMain">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarMain">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.dashboard') }}">
+                            <i class="bi bi-speedometer2 me-1"></i>Dashboard
+                        </a>
+                    </li>
+
+                    {# Pacientes #}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('pacientes.listar') }}">
+                            <i class="bi bi-people me-1"></i>Pacientes
+                        </a>
+                    </li>
+
+                    {# Emergência #}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="bi bi-heart-pulse me-1 text-danger"></i>Emergência
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('emergencia.fila') }}">
+                                    <i class="bi bi-list-ol me-2"></i>Fila de espera
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('emergencia.registrar_chegada') }}">
+                                    <i class="bi bi-person-plus me-2"></i>Registrar chegada
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    {# Ambulatório #}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="bi bi-calendar-check me-1 text-success"></i>Ambulatório
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('ambulatorio.agenda') }}">
+                                    <i class="bi bi-calendar-week me-2"></i>Agenda do dia
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('ambulatorio.agendar') }}">
+                                    <i class="bi bi-calendar-plus me-2"></i>Agendar consulta
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('ambulatorio.listar_agendas') }}">
+                                    <i class="bi bi-gear me-2"></i>Configurar agendas
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    {# Internação #}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="bi bi-hospital me-1 text-warning"></i>Internação
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('internacao.mapa_leitos') }}">
+                                    <i class="bi bi-grid-3x3-gap me-2"></i>Mapa de leitos
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('internacao.listar') }}">
+                                    <i class="bi bi-list-ul me-2"></i>Internações ativas
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('internacao.admitir') }}">
+                                    <i class="bi bi-person-plus me-2"></i>Admitir paciente
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('internacao.novo_leito') }}">
+                                    <i class="bi bi-plus-square me-2"></i>Cadastrar leito
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    {# Apoio Clínico (Fase 4) #}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="bi bi-clipboard2-plus me-1 text-info"></i>Apoio Clínico
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('exames.listar') }}">
+                                    <i class="bi bi-file-medical me-2"></i>Exames
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('farmacia.estoque') }}">
+                                    <i class="bi bi-capsule me-2"></i>Farmácia
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('nutricao.mapa_dietas') }}">
+                                    <i class="bi bi-egg-fried me-2"></i>Nutrição
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('cirurgias.escala') }}">
+                                    <i class="bi bi-scissors me-2"></i>Centro Cirúrgico
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('maternidade.painel') }}">
+                                    <i class="bi bi-gender-female me-2"></i>Maternidade
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('ccih.painel') }}">
+                                    <i class="bi bi-shield-plus me-2"></i>CCIH
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('certificado.painel') }}">
+                                    <i class="bi bi-patch-check me-2"></i>Certificação Digital
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    {# Administrativo (Fase 5) #}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="bi bi-briefcase me-1 text-light"></i>Administrativo
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('estoque.produtos') }}"><i class="bi bi-box-seam me-2"></i>Estoque / Almoxarifado</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('compras.solicitacoes') }}"><i class="bi bi-cart me-2"></i>Compras</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('financeiro.contas') }}"><i class="bi bi-cash-coin me-2"></i>Financeiro</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('faturamento.guias') }}"><i class="bi bi-receipt me-2"></i>Faturamento SUS</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('convenios.guias') }}"><i class="bi bi-file-earmark-medical me-2"></i>Convênios</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('patrimonio.bens') }}"><i class="bi bi-pc-display me-2"></i>Patrimônio</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('rh.funcionarios') }}"><i class="bi bi-people-fill me-2"></i>Recursos Humanos</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('manutencao.ordens') }}"><i class="bi bi-tools me-2"></i>Manutenção</a></li>
+                        </ul>
+                    </li>
+
+                    {# Gestão e Compliance (Fase 6) #}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="bi bi-graph-up-arrow me-1 text-light"></i>Gestão
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('relatorios.dashboard') }}"><i class="bi bi-graph-up-arrow me-2"></i>Dashboard gerencial</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('residuos.painel') }}"><i class="bi bi-trash3 me-2"></i>Resíduos (PGRSS)</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('rnds.fila') }}"><i class="bi bi-cloud-arrow-up me-2"></i>RNDS</a></li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#"
+                           data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle me-1"></i>
+                            {{ current_user.nome.split()[0] }}
+                            <span class="badge bg-light text-primary ms-1 small">
+                                {{ current_user.perfil.nome if current_user.perfil else '' }}
+                            </span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <span class="dropdown-item-text small text-muted">
+                                    {{ current_user.nome }}
+                                </span>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('main.guia') }}" target="_blank">
+                                    <i class="bi bi-question-circle me-2"></i>Guia de uso
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('auth.trocar_senha') }}">
+                                    <i class="bi bi-key me-2"></i>Alterar senha
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-danger"
+                                   href="{{ url_for('auth.logout') }}">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Sair
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <!-- Mensagens flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="container-fluid mt-2">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Conteúdo principal -->
+    <main class="{% block main_class %}container-fluid py-4{% endblock %}">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer mt-auto py-2 bg-white border-top">
+        <div class="container-fluid">
+            <span class="text-muted small">
+                {{ instituicao_nome }} &mdash; SGHSC
+                &copy; {{ now.year if now is defined else 2026 }}
+            </span>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
