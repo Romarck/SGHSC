@@ -1,0 +1,26 @@
+# docker-compose.prod.yml — override para VPS de homologação/produção.
+# Uso:  docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# Diferenças em relação ao compose de desenvolvimento:
+#  - NÃO expõe Postgres (5444) nem Flask (5050) para a internet — só o nginx (80/443).
+#  - Força FLASK_ENV=production (Gunicorn + validação de segredos no boot).
+#  - Força NGINX_ENV=production (HTTPS + HSTS + redirect 80->443).
+#  - Sem volume de código montado no app (usa o que está na imagem — imutável).
+
+services:
+  db:
+    # Remove a publicação da porta do Postgres (fica acessível só na rede interna).
+    ports: []
+
+  app:
+    environment:
+      FLASK_ENV: production
+    # Sem bind-mount do código em produção (evita divergência imagem x host).
+    volumes: []
+    # Não publica a porta do Flask; o acesso é só via nginx.
+    ports: []
+
+  nginx:
+    environment:
+      NGINX_ENV: production
+      NGINX_SERVER_NAME: ${NGINX_SERVER_NAME:-sghsc.romarck.com}
