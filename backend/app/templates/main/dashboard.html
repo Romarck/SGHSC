@@ -21,114 +21,94 @@
     </div>
 </div>
 
-{# Acesso rápido aos módulos #}
+{# ---------------------------------------------------------------------------
+   Acesso rápido aos módulos — agrupado por seção e filtrado pela permissão do
+   usuário (RBAC S-01). Cada card só aparece para quem pode acessar o módulo,
+   evitando poluição visual e cliques que resultariam em 403.
+   Estrutura de cada módulo: (endpoint, ícone, cor, rótulo, permissão)
+--------------------------------------------------------------------------- #}
+{% set secoes = [
+    ("Atendimento", [
+        ('pacientes.listar', 'bi-people', 'info', 'Pacientes', 'pacientes.ver'),
+        ('emergencia.fila', 'bi-heart-pulse', 'danger', 'Emergência / PA', 'emergencia.ver'),
+        ('ambulatorio.agenda', 'bi-calendar-check', 'success', 'Ambulatório', 'ambulatorio.ver'),
+        ('internacao.mapa_leitos', 'bi-hospital', 'warning', 'Internação / Leitos', 'internacao.ver'),
+    ]),
+    ("Apoio Clínico", [
+        ('exames.listar', 'bi-file-medical', 'info', 'Exames', 'exames.ver'),
+        ('farmacia.estoque', 'bi-capsule', 'warning', 'Farmácia', 'farmacia.ver'),
+        ('nutricao.mapa_dietas', 'bi-egg-fried', 'success', 'Nutrição', 'nutricao.ver'),
+        ('cirurgias.escala', 'bi-scissors', 'primary', 'Centro Cirúrgico', 'cirurgias.ver'),
+        ('maternidade.painel', 'bi-gender-female', 'danger', 'Maternidade', 'maternidade.ver'),
+        ('ccih.painel', 'bi-shield-plus', 'danger', 'CCIH', 'ccih.ver'),
+        ('certificado.painel', 'bi-patch-check', 'primary', 'Certificação Digital', 'certificado.usar'),
+    ]),
+    ("Administrativo", [
+        ('estoque.produtos', 'bi-box-seam', 'secondary', 'Estoque', 'estoque.ver'),
+        ('compras.solicitacoes', 'bi-cart', 'primary', 'Compras', 'compras.ver'),
+        ('financeiro.contas', 'bi-cash-coin', 'success', 'Financeiro', 'financeiro.ver'),
+        ('faturamento.guias', 'bi-receipt', 'dark', 'Faturamento SUS', 'faturamento.ver'),
+        ('convenios.guias', 'bi-file-earmark-medical', 'info', 'Convênios', 'convenios.ver'),
+        ('patrimonio.bens', 'bi-pc-display', 'secondary', 'Patrimônio', 'patrimonio.ver'),
+        ('rh.funcionarios', 'bi-people-fill', 'primary', 'RH', 'rh.ver'),
+        ('manutencao.ordens', 'bi-tools', 'warning', 'Manutenção', 'manutencao.ver'),
+    ]),
+    ("Gestão & Compliance", [
+        ('relatorios.dashboard', 'bi-graph-up-arrow', 'primary', 'Dashboard Gerencial', 'relatorios.ver'),
+        ('auditoria.trilha', 'bi-shield-lock', 'dark', 'Auditoria (LGPD)', 'auditoria.ver'),
+        ('residuos.painel', 'bi-trash3', 'success', 'Resíduos (PGRSS)', 'residuos.ver'),
+        ('rnds.fila', 'bi-cloud-arrow-up', 'info', 'RNDS', 'rnds.ver'),
+    ]),
+] %}
+
+{% set ns = namespace(algum=false) %}
+{% for titulo, modulos in secoes %}
+    {# Filtra os módulos que o usuário pode acessar (Administrador vê todos) #}
+    {% set mods_permitidos = [] %}
+    {% for m in modulos %}
+        {% if pode_acessar(m[4]) %}{% set _ = mods_permitidos.append(m) %}{% endif %}
+    {% endfor %}
+
+    {% if mods_permitidos %}
+    {% set ns.algum = true %}
+    <h6 class="text-uppercase text-muted small fw-bold mt-4 mb-2">{{ titulo }}</h6>
+    <div class="row g-3">
+        {% for mod in mods_permitidos %}
+        <div class="col-6 col-md-4 col-xl-3">
+            <a href="{{ url_for(mod[0]) }}" class="text-decoration-none">
+                <div class="card h-100 border-{{ mod[2] }} text-center card-modulo">
+                    <div class="card-body py-3">
+                        <i class="bi {{ mod[1] }} display-6 text-{{ mod[2] }} mb-2 d-block"></i>
+                        <h6 class="card-title mb-0 small">{{ mod[3] }}</h6>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+{% endfor %}
+
+{# Guia de uso — disponível para todos os usuários autenticados #}
+<h6 class="text-uppercase text-muted small fw-bold mt-4 mb-2">Ajuda</h6>
 <div class="row g-3">
-
-    <div class="col-6 col-md-4 col-xl-3">
-        <a href="{{ url_for('pacientes.listar') }}" class="text-decoration-none">
-            <div class="card h-100 border-info text-center card-modulo">
-                <div class="card-body py-4">
-                    <i class="bi bi-people display-5 text-info mb-3 d-block"></i>
-                    <h6 class="card-title mb-0">Pacientes</h6>
-                </div>
-            </div>
-        </a>
-    </div>
-
-    <div class="col-6 col-md-4 col-xl-3">
-        <a href="{{ url_for('emergencia.fila') }}" class="text-decoration-none">
-            <div class="card h-100 border-danger text-center card-modulo">
-                <div class="card-body py-4">
-                    <i class="bi bi-heart-pulse display-5 text-danger mb-3 d-block"></i>
-                    <h6 class="card-title mb-0">Emergência / PA</h6>
-                </div>
-            </div>
-        </a>
-    </div>
-
-    <div class="col-6 col-md-4 col-xl-3">
-        <a href="{{ url_for('ambulatorio.agenda') }}" class="text-decoration-none">
-            <div class="card h-100 border-success text-center card-modulo">
-                <div class="card-body py-4">
-                    <i class="bi bi-calendar-check display-5 text-success mb-3 d-block"></i>
-                    <h6 class="card-title mb-0">Ambulatório</h6>
-                </div>
-            </div>
-        </a>
-    </div>
-
-    <div class="col-6 col-md-4 col-xl-3">
-        <a href="{{ url_for('internacao.mapa_leitos') }}" class="text-decoration-none">
-            <div class="card h-100 border-warning text-center card-modulo">
-                <div class="card-body py-4">
-                    <i class="bi bi-hospital display-5 text-warning mb-3 d-block"></i>
-                    <h6 class="card-title mb-0">Internação / Leitos</h6>
-                </div>
-            </div>
-        </a>
-    </div>
-
-    {# Fase 4 — Apoio Clínico #}
-    {% for mod in [
-        ('exames.listar', 'bi-file-medical', 'info', 'Exames'),
-        ('farmacia.estoque', 'bi-capsule', 'warning', 'Farmácia'),
-        ('nutricao.mapa_dietas', 'bi-egg-fried', 'success', 'Nutrição'),
-        ('cirurgias.escala', 'bi-scissors', 'primary', 'Centro Cirúrgico'),
-        ('maternidade.painel', 'bi-gender-female', 'danger', 'Maternidade'),
-        ('ccih.painel', 'bi-shield-plus', 'danger', 'CCIH'),
-        ('certificado.painel', 'bi-patch-check', 'primary', 'Certificação Digital'),
-    ] %}
-    <div class="col-6 col-md-4 col-xl-3">
-        <a href="{{ url_for(mod[0]) }}" class="text-decoration-none">
-            <div class="card h-100 border-{{ mod[2] }} text-center card-modulo">
-                <div class="card-body py-4">
-                    <i class="bi {{ mod[1] }} display-5 text-{{ mod[2] }} mb-3 d-block"></i>
-                    <h6 class="card-title mb-0">{{ mod[3] }}</h6>
-                </div>
-            </div>
-        </a>
-    </div>
-    {% endfor %}
-
-    {# Fase 5 — Administrativo #}
-    {% for mod in [
-        ('estoque.produtos', 'bi-box-seam', 'secondary', 'Estoque'),
-        ('compras.solicitacoes', 'bi-cart', 'primary', 'Compras'),
-        ('financeiro.contas', 'bi-cash-coin', 'success', 'Financeiro'),
-        ('faturamento.guias', 'bi-receipt', 'dark', 'Faturamento SUS'),
-        ('convenios.guias', 'bi-file-earmark-medical', 'info', 'Convênios'),
-        ('patrimonio.bens', 'bi-pc-display', 'secondary', 'Patrimônio'),
-        ('rh.funcionarios', 'bi-people-fill', 'primary', 'RH'),
-        ('manutencao.ordens', 'bi-tools', 'warning', 'Manutenção'),
-        ('relatorios.dashboard', 'bi-graph-up-arrow', 'primary', 'Dashboard Gerencial'),
-        ('residuos.painel', 'bi-trash3', 'success', 'Resíduos (PGRSS)'),
-        ('rnds.fila', 'bi-cloud-arrow-up', 'info', 'RNDS'),
-    ] %}
-    <div class="col-6 col-md-4 col-xl-3">
-        <a href="{{ url_for(mod[0]) }}" class="text-decoration-none">
-            <div class="card h-100 border-{{ mod[2] }} text-center card-modulo">
-                <div class="card-body py-4">
-                    <i class="bi {{ mod[1] }} display-5 text-{{ mod[2] }} mb-3 d-block"></i>
-                    <h6 class="card-title mb-0">{{ mod[3] }}</h6>
-                </div>
-            </div>
-        </a>
-    </div>
-    {% endfor %}
-
-    {# Guia de uso #}
     <div class="col-6 col-md-4 col-xl-3">
         <a href="{{ url_for('main.guia') }}" target="_blank" class="text-decoration-none">
             <div class="card h-100 border-info text-center card-modulo">
-                <div class="card-body py-4">
-                    <i class="bi bi-question-circle display-5 text-info mb-3 d-block"></i>
-                    <h6 class="card-title mb-0">Guia de Uso</h6>
+                <div class="card-body py-3">
+                    <i class="bi bi-question-circle display-6 text-info mb-2 d-block"></i>
+                    <h6 class="card-title mb-0 small">Guia de Uso</h6>
                 </div>
             </div>
         </a>
     </div>
-
 </div>
+
+{% if not ns.algum %}
+<div class="alert alert-light border text-center text-muted mt-3">
+    Você ainda não tem módulos liberados. Contate o administrador do sistema.
+</div>
+{% endif %}
 {% endblock %}
 
 {% block extra_js %}

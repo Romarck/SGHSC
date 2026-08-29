@@ -296,8 +296,20 @@ def _register_context_processors(app: Flask) -> None:
 
     @app.context_processor
     def inject_globals():
+        # Helper de permissão para os templates (ex.: mostrar cards do dashboard
+        # só para quem pode acessar). Reusa a MESMA regra do RBAC das rotas
+        # (Administrador vê tudo; demais dependem de tem_permissao) — mantém a UI
+        # coerente com o backend (S-01), sem prometer acesso que resultaria em 403.
+        from .utils.authz import _usuario_autorizado
+
+        def pode_acessar(codigo: str) -> bool:
+            if not getattr(current_user, "is_authenticated", False):
+                return False
+            return _usuario_autorizado(current_user, codigo)
+
         return {
             "instituicao_nome": app.config.get("INSTITUICAO_NOME"),
             "instituicao_cnes": app.config.get("INSTITUICAO_CNES"),
             "current_user": current_user,
+            "pode_acessar": pode_acessar,
         }
