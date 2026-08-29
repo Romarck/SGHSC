@@ -1,26 +1,81 @@
-# docker-compose.prod.yml — override para VPS de homologação/produção.
-# Uso:  docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+# docker-compose.prod.yml — arquivo AUTÔNOMO para VPS atrás de um Caddy externo.
 #
-# Diferenças em relação ao compose de desenvolvimento:
-#  - NÃO expõe Postgres (5444) nem Flask (5050) para a internet — só o nginx (80/443).
-#  - Força FLASK_ENV=production (Gunicorn + validação de segredos no boot).
-#  - Força NGINX_ENV=production (HTTPS + HSTS + redirect 80->443).
-#  - Sem volume de código montado no app (usa o que está na imagem — imutável).
+# Use SOZINHO (não como override), pois o merge de listas de `ports` do Compose
+# não zera portas do arquivo base:
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# Arquitetura (VPS compartilhada com o DeskcommCRM):
+#   Internet --80/443--> Caddy externo (TLS automático Let's Encrypt)
+#                        --rede deskcommcrm_internal--> sghsc_nginx (HTTP interno :80)
+#                                                       --> sghsc_app (Gunicorn :5000)
+#
+# Nenhum serviço publica portas no host (não conflita com o Caddy nem expõe
+# Postgres/Flask à internet). O TLS/HSTS é responsabilidade do Caddy.
 
 services:
   db:
-    # Remove a publicação da porta do Postgres (fica acessível só na rede interna).
-    ports: []
+    image: postgres:16-alpine
+    container_name: sghsc_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-sghsc}
+      POSTGRES_USER: ${POSTGRES_USER:-sghsc_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sghsc_user} -d ${POSTGRES_DB:-sghsc}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
 
   app:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sghsc_app
+    restart: unless-stopped
+    env_file:
+      - .env
     environment:
       FLASK_ENV: production
-    # Sem bind-mount do código em produção (evita divergência imagem x host).
-    volumes: []
-    # Não publica a porta do Flask; o acesso é só via nginx.
-    ports: []
+      DATABASE_URL: postgresql://${POSTGRES_USER:-sghsc_user}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-sghsc}
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["/app/entrypoint.sh"]
+    networks:
+      - internal
 
   nginx:
+    image: nginx:1.25-alpine
+    container_name: sghsc_nginx
+    restart: unless-stopped
     environment:
-      NGINX_ENV: production
+      # HTTP interno; o TLS termina no Caddy externo. Sem HSTS aqui.
+      NGINX_ENV: development
       NGINX_SERVER_NAME: ${NGINX_SERVER_NAME:-sghsc.romarck.com}
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/docker-entrypoint.sh:/docker-entrypoint.sh:ro
+      - ./backend/app/static:/static:ro
+    entrypoint: ["/docker-entrypoint.sh"]
+    depends_on:
+      - app
+    networks:
+      - internal      # fala com o app
+      - caddy_net     # alcançável pelo Caddy externo como "sghsc_nginx:80"
+
+volumes:
+  pgdata:
+    driver: local
+
+networks:
+  internal:
+    driver: bridge
+  caddy_net:
+    external: true
+    name: deskcommcrm_internal
