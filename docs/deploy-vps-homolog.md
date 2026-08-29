@@ -11,6 +11,38 @@
 
 ---
 
+## ⚠️ REGRA DE OURO desta VPS (aprendida na prática)
+
+**Em produção NÃO há bind-mount do código** (`docker-compose.prod.yml` usa o código
+que está DENTRO da imagem). Portanto, **`git pull` sozinho não muda nada em execução**.
+Sempre que o código mudar (inclui `seed_demo.py`, rotas, `requirements.txt`):
+
+```bash
+cd /opt/sghsc && git pull
+docker compose -f docker-compose.prod.yml up -d --build   # o --build é OBRIGATÓRIO
+```
+
+Sintomas de esquecer o `--build`: módulo Python "não encontrado", scripts rodando
+versão antiga, `NotNullViolation` em código já corrigido. Se algo "corrigido" ainda
+falha, quase sempre é imagem velha → rebuild.
+
+### Arquitetura desta VPS (compartilhada com o DeskcommCRM)
+- Um **Caddy externo** (do CRM) é o proxy TLS de 80/443. Nosso stack **não** expõe portas.
+- O SGHSC roda com `docker-compose.prod.yml` (autônomo). O nginx interno faz proxy para
+  `sghsc_app:5000` (nome do container — evita colisão com o `app` do CRM).
+- O domínio é publicado adicionando um bloco no `/root/DeskcommCRM/Caddyfile`
+  (`sghsc.romarck.com { reverse_proxy sghsc_nginx:80 }`) + `caddy reload`.
+
+### Popular dados de demonstração (homologação)
+```bash
+cd /opt/sghsc && git pull
+docker compose -f docker-compose.prod.yml up -d --build app   # rebuild p/ pegar o código
+docker exec -it sghsc_app python seed_demo.py                 # idempotente
+```
+Cria 8 pacientes fictícios e dados em todos os módulos. Usuário demo: `dr.demo` / `Demo@123`.
+
+---
+
 ## 0. Pré-requisitos e segurança de acesso
 
 ### 0.1 Acesso por chave SSH (recomendado; evite senha)
