@@ -32,16 +32,20 @@ def test_medico_tem_permissao_prescrever(app):
 
 
 def test_curinga_expande_modulo(app):
-    """Farmacêutico recebe 'farmacia.*' → deve ter todas as permissões de farmácia."""
-    with app.app_context():
-        # Cria o perfil Farmacêutico e re-semeia (o seed associa apenas perfis existentes)
-        perfil = Perfil(nome="Farmacêutico", tipo=TipoPerfil.FARMACEUTICO)
-        db.session.add(perfil)
-        db.session.commit()
-        seed_permissoes()
+    """Farmacêutico recebe 'farmacia.*' → deve ter todas as permissões de farmácia.
 
+    O perfil Farmacêutico agora é criado automaticamente por seed_perfis_padrao()
+    (chamado dentro de seed_permissoes), então apenas o obtemos.
+    """
+    with app.app_context():
         perfil = Perfil.query.filter_by(tipo=TipoPerfil.FARMACEUTICO).first()
-        assert perfil is not None
+        assert perfil is not None, "seed deveria ter criado o perfil Farmacêutico"
         assert perfil.tem_permissao("farmacia.ver")
         assert perfil.tem_permissao("farmacia.gerir")
         assert perfil.tem_permissao("farmacia.dispensar")
+
+
+def test_seed_cria_perfis_padrao(app):
+    """seed_permissoes deve garantir os 15 perfis padrão no banco."""
+    with app.app_context():
+        assert Perfil.query.count() >= 15

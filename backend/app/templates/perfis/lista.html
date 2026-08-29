@@ -1,0 +1,74 @@
+{% extends "layout.html" %}
+{% block title %}Perfis de Acesso{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-diagram-3 me-2 text-primary"></i>Perfis de Acesso</h4>
+    <div>
+        <a href="{{ url_for('usuarios.listar') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-people me-1"></i>Usuários
+        </a>
+        <a href="{{ url_for('perfis.novo') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Novo Perfil
+        </a>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Perfil</th>
+                    <th>Descrição</th>
+                    <th class="text-center">Usuários</th>
+                    <th class="text-center">Permissões</th>
+                    <th class="text-end">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for perfil, n_usuarios, n_perms in dados %}
+                <tr>
+                    <td>
+                        <strong>{{ perfil.nome }}</strong>
+                        {% if perfil.tipo %}<span class="badge bg-light text-muted ms-1">padrão</span>{% endif %}
+                    </td>
+                    <td class="small text-muted">{{ perfil.descricao or "—" }}</td>
+                    <td class="text-center">{{ n_usuarios }}</td>
+                    <td class="text-center">
+                        {% if perfil.tipo and perfil.tipo == TipoPerfil.ADMINISTRADOR %}
+                            <span class="badge bg-dark">acesso total</span>
+                        {% else %}
+                            {{ n_perms }}
+                        {% endif %}
+                    </td>
+                    <td class="text-end text-nowrap">
+                        {% if perfil.tipo == TipoPerfil.ADMINISTRADOR %}
+                            <span class="text-muted small"><i class="bi bi-lock"></i> protegido</span>
+                        {% else %}
+                            <a href="{{ url_for('perfis.editar', id=perfil.id) }}"
+                               class="btn btn-sm btn-outline-secondary" title="Editar permissões">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {% if n_usuarios == 0 %}
+                            <form method="POST" action="{{ url_for('perfis.excluir', id=perfil.id) }}"
+                                  class="d-inline"
+                                  onsubmit="return confirm('Excluir o perfil {{ perfil.nome }}?');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn btn-sm btn-outline-danger" title="Excluir">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<p class="text-muted small mt-2">
+    O perfil <strong>Administrador</strong> tem acesso total ao sistema e não é editável.
+</p>
+{% endblock %}

@@ -192,13 +192,56 @@ PERFIL_PERMISSOES: dict[TipoPerfil, set[str]] = {
 # Seed idempotente
 # ---------------------------------------------------------------------------
 
+# Nomes amigáveis para os perfis padrão (usados no seed dos perfis).
+NOMES_PERFIL_PADRAO: dict[TipoPerfil, str] = {
+    TipoPerfil.ADMINISTRADOR: "Administrador",
+    TipoPerfil.MEDICO: "Médico",
+    TipoPerfil.ENFERMEIRO: "Enfermeiro",
+    TipoPerfil.TECNICO_ENFERMAGEM: "Técnico de Enfermagem",
+    TipoPerfil.FARMACEUTICO: "Farmacêutico",
+    TipoPerfil.RECEPCIONISTA: "Recepcionista",
+    TipoPerfil.FATURAMENTO: "Faturamento",
+    TipoPerfil.FINANCEIRO: "Financeiro",
+    TipoPerfil.ALMOXARIFE: "Almoxarife",
+    TipoPerfil.NUTRICIONISTA: "Nutricionista",
+    TipoPerfil.FISIOTERAPEUTA: "Fisioterapeuta",
+    TipoPerfil.ASSISTENTE_SOCIAL: "Assistente Social",
+    TipoPerfil.LABORATORISTA: "Laboratorista",
+    TipoPerfil.RADIOLOGISTA: "Radiologista",
+    TipoPerfil.GESTOR: "Gestor",
+}
+
+
+def seed_perfis_padrao() -> int:
+    """
+    Cria os perfis padrão (a partir de TipoPerfil) que ainda não existem no banco,
+    para que fiquem disponíveis no cadastro de usuários. Idempotente — não recria
+    perfis existentes nem sobrescreve permissões já ajustadas manualmente.
+
+    Retorna a quantidade de perfis criados.
+    """
+    criados = 0
+    for tipo, nome in NOMES_PERFIL_PADRAO.items():
+        if Perfil.query.filter_by(tipo=tipo).first() is None:
+            db.session.add(Perfil(nome=nome, tipo=tipo, descricao=f"Perfil padrão: {nome}"))
+            criados += 1
+    if criados:
+        db.session.commit()
+    return criados
+
+
 def seed_permissoes() -> dict:
     """
     Cria/atualiza as Permissao do catálogo e associa aos Perfis conforme o
     mapeamento. Idempotente: não duplica e reconcilia associações a cada execução.
 
+    Também garante que os perfis padrão existam (seed_perfis_padrao) ANTES de
+    associar as permissões, para que os 15 perfis apareçam no cadastro de usuário.
+
     Retorna um resumo com contagens (para log).
     """
+    # 0) Garante que os perfis padrão existam (senão o dropdown fica vazio)
+    perfis_criados = seed_perfis_padrao()
     # 1) Garante que toda permissão do catálogo existe
     existentes = {p.codigo: p for p in Permissao.query.all()}
     criadas = 0
@@ -216,16 +259,20 @@ def seed_permissoes() -> dict:
             p.modulo = modulo
     db.session.flush()
 
-    # 2) Reconcilia associações por perfil (apenas perfis de tipo conhecido)
+    # 2) Semeia permissões dos perfis padrão APENAS na primeira vez (quando o
+    #    perfil ainda não tem nenhuma permissão). Assim, o seed no boot NÃO
+    #    sobrescreve ajustes feitos manualmente pelo admin no CRUD de perfis.
     perfis_atualizados = 0
     for perfil in Perfil.query.filter(Perfil.tipo.isnot(None)).all():
         if perfil.tipo == TipoPerfil.ADMINISTRADOR:
             # Administrador tem acesso total via decorator; não precisa de vínculos.
             continue
+        if perfil.permissoes:
+            # Já tem permissões (padrão ou editadas) — respeita o que está no banco.
+            continue
         desejadas = _expandir(PERFIL_PERMISSOES.get(perfil.tipo, set()))
         objetos = [existentes[c] for c in desejadas if c in existentes]
-        atual = {p.codigo for p in perfil.permissoes}
-        if atual != desejadas:
+        if objetos:
             perfil.permissoes = objetos
             perfis_atualizados += 1
 
@@ -233,6 +280,7 @@ def seed_permissoes() -> dict:
 
     return {
         "permissoes_totais": len(CATALOGO),
+        "perfis_criados": perfis_criados,
         "permissoes_criadas": criadas,
         "perfis_atualizados": perfis_atualizados,
     }
