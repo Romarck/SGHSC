@@ -3,14 +3,21 @@
 **Data:** 2026-09-05
 **Autor:** @po
 **Status:** Em Revisão (aprovação pendente)
-**Versão:** 2.0 (evolução para SAAS Multi-tenant)
+**Versão:** 2.0 (evolução para SAAS Multi-tenant + adequação ISO 27001)
 
 > **Versão 2.0** — Reposiciona o produto: o antigo **SGHSC** (Sistema de Gestão
 > Hospitalar para Santas Casas), de instância única para a Santa Casa de Pedralva,
 > passa a ser o **QUÍRON**, um **SAAS multi-tenant** comercializável para múltiplas
 > empresas (hospitais e Santas Casas), com **isolamento total de dados** por empresa,
-> **Super-Admin** operador do SAAS e **painel administrativo** gerencial.
-> A versão 1.0 (produto de instância única) está preservada na seção "Histórico".
+> **Super-Admin** operador do SAAS e **painel administrativo** gerencial. Acrescenta
+> ainda a **adequação aos controles técnicos da ISO/IEC 27001:2022 (Anexo A)** para
+> segurança total dos dados de saúde. A versão 1.0 está preservada na seção "Histórico".
+
+> **Nota sobre ISO 27001:** a norma certifica a **organização e seu SGSI** (processos,
+> políticas, pessoas), não um software. O QUÍRON entrega os **controles técnicos**
+> aplicáveis ao produto/infra, deixando-o aderente e auditável. As frentes
+> organizacionais são responsabilidade da operação. Detalhamento em
+> `docs/iso27001-gap-analysis.md`.
 
 ---
 
@@ -97,6 +104,24 @@ com validação pública por QR Code (MP 2.200-2/2001).
 - **FR-MT-06 — Branding por empresa:** documentos e telas exibem a identidade da empresa
   (tenant), não mais uma instituição fixa global.
 
+### 3.1.b. NOVAS (v2.0 — Segurança ISO 27001)
+
+> Mapeadas por controle do Anexo A. Gap analysis completo em `docs/iso27001-gap-analysis.md`.
+
+- **FR-SEC-01 — Autenticação em dois fatores (2FA/TOTP)** (A.8.5): obrigatório para
+  Super-Admin e Administradores; forçável por empresa; com códigos de backup.
+- **FR-SEC-02 — Auditoria de eventos de segurança** (A.8.15): registra login
+  (sucesso/falha), CRUD de usuário, mudança de permissão e cadastro/suspensão de empresa,
+  além do acesso a paciente já existente.
+- **FR-SEC-03 — Trilha inviolável** (A.5.28): encadeamento por hash dos registros de
+  auditoria (cadeia à prova de adulteração).
+- **FR-SEC-04 — Criptografia em repouso** (A.8.24): cifra a nível de coluna para dados
+  ultrassensíveis (ex.: CPF, CNS) + orientação de cifra de volume (LUKS) na VPS.
+- **FR-SEC-05 — Backup externo criptografado automatizado** (A.8.13): `pg_dump` diário
+  cifrado enviado a armazenamento externo isolado da VPS, com procedimento de restore/DR.
+- **FR-SEC-06 — DevSecOps no pipeline** (A.8.28): SAST (`bandit`) e secret scanning
+  (`gitleaks`) no CI; sanitização de texto livre (`bleach`); proteção da branch `main`.
+
 ### 3.2. HERDADAS (v1.0 — operam dentro de cada tenant)
 
 > Detalhamento técnico em `docs/PROJECT_STATE.md`; dados em `docs/datamodel.md`.
@@ -117,6 +142,11 @@ com validação pública por QR Code (MP 2.200-2/2001).
 | **NFR-MT-01** | **Isolamento de tenant** | **Nenhuma requisição pode ler/gravar dados de outra empresa. Enforcement na camada de dados (não só por rota), com testes de isolamento obrigatórios.** |
 | **NFR-MT-02** | Privacidade do Super-Admin | O Super-Admin não acessa conteúdo clínico de nenhuma empresa; apenas metadados agregados de gestão. |
 | **NFR-MT-03** | Escrita segura de tenant | `empresa_id` é atribuído automaticamente na criação do registro a partir do contexto autenticado; nunca por input do cliente. |
+| **NFR-ISO-01** | Segurança total dos dados (ISO 27001) | Dados de saúde protegidos em trânsito (TLS) **e em repouso** (cifra de volume + coluna); acesso com MFA e RBAC; trilha inviolável. |
+| **NFR-ISO-02** | Rastreabilidade e não-repúdio | Eventos de segurança e acesso a dado clínico auditados de forma append-only e à prova de adulteração (encadeamento por hash). |
+| **NFR-ISO-03** | Continuidade de negócio | Backup automatizado, criptografado e geodistribuído; procedimento de disaster recovery documentado e testável (RTO/RPO). |
+| **NFR-ISO-04** | Desenvolvimento seguro (DevSecOps) | SAST + secret scanning + auditoria de dependências no CI; sem dados reais fora de produção; OWASP Top 10 endereçado. |
+| **NFR-ISO-05** | Endurecimento de infra | Isolamento de rede no Docker; segredos fora do código; hardening de VPS/SSH documentado; responsabilidade compartilhada mapeada. |
 | NFR-01 | Segurança — AuthZ | Toda rota sensível exige permissão específica (RBAC efetivo) + escopo de tenant. |
 | NFR-02 | Segurança — Transporte | HTTPS/TLS 1.2+ obrigatório com HSTS em produção. |
 | NFR-03 | Privacidade — LGPD | Dados de saúde tratados como sensíveis; log de acesso a prontuário; mínimo necessário exposto; isolamento por empresa. |
@@ -181,9 +211,17 @@ O plano de execução detalhado (fases MT-0 a MT-6) está em
 | MT-4 | Painel administrativo com gráficos |
 | MT-5 | Verificação, testes e atualização de documentação |
 | MT-6 | Merge da branch `quiron` na `main` (após aprovação e validação) |
+| SEC-1 | 2FA/TOTP (A.8.5) |
+| SEC-2 | Auditoria de eventos de segurança + trilha inviolável (A.8.15/A.5.28) |
+| SEC-3 | Criptografia em repouso (A.8.24) |
+| SEC-4 | Backup externo criptografado + DR (A.8.13/A.5.29-30) |
+| SEC-5 | Dados seguros fora de produção (A.8.31) |
+| SEC-6 | DevSecOps no CI: SAST, secret scanning, sanitização (A.8.28) |
+| SEC-7 | Hardening de infra e documentação de controles ISO (A.5.23/A.8.20) |
 
 O backlog de segurança da v1.0 (stories S-01 a S-10) permanece válido e concluído;
-a v2.0 acrescenta a story de **isolamento multi-tenant** como P0.
+a v2.0 acrescenta como **P0** o **isolamento multi-tenant** e a trilha de adequação
+**ISO 27001** (fases SEC-1 a SEC-7 — ver `docs/iso27001-gap-analysis.md`).
 
 ---
 
@@ -192,7 +230,7 @@ a v2.0 acrescenta a story de **isolamento multi-tenant** como P0.
 | Data | Versão | Mudança | Autor |
 |------|--------|---------|-------|
 | 2026-08-28 | 1.0 | PRD do SGHSC (instância única) a partir do sistema implementado e auditorias | @po |
-| 2026-09-05 | 2.0 | Evolução para SAAS multi-tenant QUÍRON: Super-Admin, CRUD de empresas, isolamento por tenant, painel administrativo, rebranding | @po |
+| 2026-09-05 | 2.0 | Evolução para SAAS multi-tenant QUÍRON: Super-Admin, CRUD de empresas, isolamento por tenant, painel administrativo, rebranding + adequação aos controles técnicos ISO/IEC 27001 (2FA, criptografia em repouso, auditoria de eventos, backup externo, DevSecOps) | @po |
 
 ---
 

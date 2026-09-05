@@ -212,6 +212,42 @@ Indicadores agregados **entre empresas** (sem expor dados clínicos individuais)
 **Fase MT-6 — Merge**
 - Após validação completa (você aprova), merge da `quiron` na `main`.
 
+### Trilha de segurança ISO 27001 (fases SEC-x)
+
+> Detalhamento e mapeamento por controle do Anexo A em `docs/iso27001-gap-analysis.md`.
+> Executadas junto/depois das fases MT-x (compartilham a refatoração de usuário,
+> auditoria e config). **A ISO 27001 certifica a organização/SGSI, não o software** —
+> aqui entregamos os **controles técnicos** que deixam o produto aderente e auditável.
+
+**Fase SEC-1 — Autenticação forte (A.8.5)**
+- **2FA/TOTP** (`pyotp`) com QR de enrollment; obrigatório para Super-Admin e Administradores;
+  forçável por empresa. Recuperação por códigos de backup.
+
+**Fase SEC-2 — Auditoria de eventos de segurança + integridade (A.8.15/A.5.28)**
+- Estende a trilha para login (sucesso/falha), CRUD de usuário, mudança de permissão,
+  cadastro/suspensão de empresa. **Encadeamento por hash** (cadeia à prova de adulteração).
+
+**Fase SEC-3 — Criptografia em repouso (A.8.24)**
+- Cifra a nível de coluna para dados ultrassensíveis (ex.: CPF, CNS) via `pgcrypto`/app;
+  orientação de cifra de volume (LUKS) na VPS. Gestão/rotação de chave documentada.
+
+**Fase SEC-4 — Backup externo criptografado (A.8.13/A.5.29-30)**
+- Rotina de `pg_dump` diário → criptografado → enviado a armazenamento externo isolado
+  da VPS (S3/GCS/outro). Procedimento de restore + DR documentado.
+
+**Fase SEC-5 — Dados seguros fora de produção (A.8.31)**
+- Garante seed 100% fictício/mascarado; anonimização de dump para homolog; regra
+  documentada "nunca dado real em dev/homolog".
+
+**Fase SEC-6 — DevSecOps no CI (A.8.28)**
+- Adiciona **SAST (`bandit`)** e **secret scanning (`gitleaks`)** ao `ci.yml` (falha o build).
+- Sanitização com `bleach` em texto livre / revisão de `| safe`. Redes Docker segregadas
+  também em dev. Proteção de branch `main` + revisão obrigatória.
+
+**Fase SEC-7 — Hardening de infra e documentação (A.5.23/A.8.20/A.8.22)**
+- Documento de responsabilidade compartilhada VPS; hardening SSH (chave, sem senha, via VPN);
+  WAF na frente da VPS; tabela de rastreabilidade de controles ISO (`docs/security/iso27001-controles.md`).
+
 ---
 
 ## 9. Riscos e mitigações
@@ -224,6 +260,11 @@ Indicadores agregados **entre empresas** (sem expor dados clínicos individuais)
 | Unicidade global de `username`/`cpf` quebrando multi-tenant | Médio | Constraints compostas por empresa; revisão caso a caso |
 | Super-Admin acessar dado clínico por engano | Alto (privacidade) | Super-Admin sem `empresa_id`; blueprint isolado; nunca instancia queries de negócio |
 | Regressão nos 24 módulos existentes | Médio | Execução por fases com app subindo e testes a cada fase |
+| Ransomware destruindo VPS + banco juntos | **Crítico** | Backup externo criptografado e isolado (SEC-4) + DR testado |
+| Dados sensíveis legíveis se o disco/volume vazar | Alto | Criptografia em repouso: volume (LUKS) + coluna (SEC-3) |
+| Conta comprometida por senha fraca/vazada | Alto | 2FA/TOTP para papéis privilegiados (SEC-1) |
+| Adulteração de trilha de auditoria | Alto | Encadeamento por hash (trilha inviolável — SEC-2) |
+| Vulnerabilidade introduzida em atualização | Médio | SAST + secret scanning + pip-audit no CI (SEC-6) |
 
 ---
 
@@ -238,7 +279,10 @@ Indicadores agregados **entre empresas** (sem expor dados clínicos individuais)
 
 ## 11. Entregáveis para sua aprovação
 
-1. **Este plano** (`docs/plano-quiron-multitenant.md`).
-2. **PRD atualizado** para o QUÍRON multi-tenant (`docs/prd.md`, versão 2.0) — ver próximo documento.
+1. **Este plano** (`docs/plano-quiron-multitenant.md`) — inclui as trilhas MT-x (multi-tenant) e SEC-x (ISO 27001).
+2. **PRD atualizado** para o QUÍRON multi-tenant + segurança ISO 27001 (`docs/prd.md`, versão 2.0).
+3. **Gap analysis ISO 27001** (`docs/iso27001-gap-analysis.md`) — o que já temos x o que falta, por controle do Anexo A.
 
 Ao aprovar, sigo pela **Fase MT-0** e vou commitando na branch `quiron` a cada fase.
+As fases SEC-x entram intercaladas com as MT-x conforme dependências (ex.: SEC-1/2
+dependem do model de usuário já ajustado na MT-0).
